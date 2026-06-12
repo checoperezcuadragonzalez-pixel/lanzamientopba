@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBA · Centro de Mando v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0D;--panel:#141417;--panel2:#1B1B20;--line:#26262C;--txt:#EDEDEF;--mut:#8E8E98;--gold:#FACC15;--gold-dim:rgba(250,204,21,.1);--red:#EF4444;--amber:#F59E0B;--green:#22C55E;--purple:#A78BFA;--blue:#60A5FA;--teal:#2DD4BF}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6}
+h1,h2,h3,h4{font-family:'Archivo',sans-serif}
+/* HEADER */
+.header{padding:36px 24px 20px;border-bottom:1px solid var(--line);max-width:1200px;margin:0 auto}
+.header-label{color:var(--gold);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:11px}
+.header-title{font-size:clamp(28px,5vw,48px);font-weight:900;line-height:1.05;margin:8px 0 4px}
+.header-sub{color:var(--mut);font-size:13px;margin-bottom:16px}
+/* COUNTDOWNS */
+.cd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.cd-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.cd-label{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.1em}
+.cd-val{font-family:'Archivo',sans-serif;font-size:22px;font-weight:900;color:var(--gold);margin-top:2px}
+/* CASH BAR */
+.cash-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px}
+.cash-num{font-family:'Archivo',sans-serif;font-size:38px;font-weight:900;color:var(--gold)}
+.cash-bar-wrap{position:relative;height:10px;background:var(--panel2);border-radius:99px;margin:10px 0 24px;overflow:visible}
+.cash-bar-fill{height:100%;background:linear-gradient(90deg,#92400E,#FACC15);border-radius:99px;transition:width .4s}
+.cash-marker{position:absolute;top:-5px;height:20px;width:2px;border-radius:2px}
+.cash-marker-label{position:absolute;top:16px;left:50%;transform:translateX(-50%);font-size:9px;white-space:nowrap}
+.cash-dx{margin-top:6px;padding:10px 13px;background:var(--panel2);border-radius:10px;font-size:13px}
+/* NAV */
+.nav{position:sticky;top:0;z-index:50;background:rgba(11,11,13,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;gap:2px;overflow-x:auto;padding:0 16px}
+.nav-btn{background:none;border:none;color:var(--mut);font:600 12px 'Inter';padding:14px 11px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.15s}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:24px 24px 80px}
+/* PILLS */
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.pill-gold{background:rgba(250,204,21,.15);color:#FACC15}
+.pill-red{background:rgba(239,68,68,.15);color:#FCA5A5}
+.pill-purple{background:rgba(167,139,250,.15);color:#C4B5FD}
+.pill-blue{background:rgba(96,165,250,.15);color:#93C5FD}
+.pill-amber{background:rgba(245,158,11,.15);color:#FCD34D}
+.pill-gray{background:rgba(142,142,152,.15);color:#B9B9C2}
+/* SECTIONS */
+.section{display:none}
+.section.active{display:block}
+/* DAY CARDS */
+.day-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.day-card.today{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.day-summary{cursor:pointer;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;user-select:none}
+.day-summary:hover{background:rgba(255,255,255,.02)}
+.day-date{font-family:'Archivo',sans-serif;font-weight:700;font-size:14px;min-width:68px}
+.day-title-text{flex:1;font-family:'Archivo',sans-serif;font-weight:700;font-size:14px}
+.day-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.day-body{padding:0 18px 20px;display:none}
+.day-card.open .day-body{display:block}
+.day-card.open .day-arrow{transform:rotate(45deg)}
+.day-arrow{color:var(--gold);font-size:18px;transition:transform .2s;flex-shrink:0}
+/* MINI PROGRESS */
+.mini-prog{display:inline-block;width:46px;height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;vertical-align:middle}
+.mini-prog-fill{height:100%;background:var(--gold);border-radius:99px;transition:width .3s}
+/* FOCO BOX */
+.foco-box{background:var(--gold-dim);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;padding:11px 14px;font-size:13px;margin:10px 0 14px}
+.foco-label{font-weight:700;color:var(--gold);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+/* BLOCKS */
+.blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:12px 0}
+.block{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px}
+.block-label{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.09em;font-weight:700;margin-bottom:6px}
+/* GUION BOX */
+.guion-box{background:#0D1117;border:1px solid #30363D;border-radius:10px;padding:14px;margin:8px 0}
+.guion-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.guion-title{font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.guion-text{font-size:13px;color:#CDD9E5;line-height:1.65;font-style:italic;white-space:pre-wrap}
+.guion-edit{background:#161B22;border:1px solid #30363D;border-radius:8px;padding:10px;font:13px/1.65 'Inter';color:var(--txt);width:100%;resize:vertical;min-height:80px;margin-top:8px}
+.guion-edit:focus{outline:none;border-color:var(--teal)}
+/* STORIES */
+.stories-grid{display:grid;gap:8px;margin:10px 0}
+.story-row{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 13px;display:grid;grid-template-columns:32px 1fr 1fr 1fr;gap:10px;align-items:start;font-size:12.5px}
+.story-num{background:var(--purple);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
+.story-col-label{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+/* CHECKLIST */
+.checklist{margin-top:14px}
+.check-header{font-family:'Archivo',sans-serif;font-weight:700;font-size:13.5px;margin-bottom:6px}
+.prog-bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:6px 0 10px}
+.prog-fill{height:100%;background:var(--gold);border-radius:99px;transition:width .3s}
+.check-item{display:flex;gap:9px;align-items:flex-start;padding:7px 9px;border-radius:9px;cursor:pointer;font-size:13.5px}
+.check-item:hover{background:var(--panel2)}
+.check-item input{margin-top:3px;accent-color:var(--gold);width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.check-item.done span{color:var(--mut);text-decoration:line-through}
+/* BA MODULE */
+.ba-row{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;margin:8px 0}
+.ba-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700}
+.ba-checo{background:rgba(250,204,21,.15);color:#FACC15}
+.ba-joc{background:rgba(167,139,250,.15);color:#C4B5FD}
+.ba-both{background:rgba(45,212,191,.15);color:#5EEAD4}
+/* STATS SECTION */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+.stat-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat-label{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.stat-val{font-family:'Archivo',sans-serif;font-size:28px;font-weight:900;color:var(--gold);margin:4px 0}
+.stat-sub{font-size:12px;color:var(--mut)}
+.counter-row{display:flex;align-items:center;gap:10px}
+.btn-pm{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--gold);font-size:18px;font-weight:900;cursor:pointer;flex-shrink:0}
+.btn-pm:hover{background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:7px 9px;color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--line)}
+td{padding:8px 9px;border-bottom:1px solid var(--line)}
+.input-field{background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:7px 10px;font:500 13px 'Inter';width:100%}
+.input-field:focus{outline:none;border-color:var(--gold)}
+.btn-save{background:var(--gold);color:#111;border:none;border-radius:9px;padding:8px 16px;font:700 13px 'Inter';cursor:pointer}
+.btn-del{background:none;border:none;color:var(--mut);cursor:pointer;font-size:15px}
+/* SECTION TITLE */
+.sec-title{font-family:'Archivo',sans-serif;font-size:22px;font-weight:900;margin-bottom:6px}
+.sec-sub{color:var(--mut);font-size:13px;margin-bottom:18px}
+.sec-h3{font-family:'Archivo',sans-serif;font-size:15px;font-weight:700;color:var(--gold);margin:22px 0 10px}
+/* PLAYBOOK */
+.playbook-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.playbook-summary{cursor:pointer;padding:14px 18px;font-family:'Archivo',sans-serif;font-weight:700;font-size:14.5px;display:flex;justify-content:space-between;align-items:center}
+.playbook-body{padding:0 18px 18px;font-size:13.5px;display:none;line-height:1.7}
+.playbook-card.open .playbook-body{display:block}
+/* DIVIDER */
+.div-line{border:none;border-top:1px solid var(--line);margin:18px 0}
+/* VERDE QUOTE */
+.quote-box{border-left:3px solid var(--teal);background:rgba(45,212,191,.07);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;margin:12px 0}
+/* SAVING */
+.saving-badge{position:fixed;bottom:20px;right:20px;background:var(--panel);border:1px solid var(--gold);color:var(--gold);padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;z-index:100;display:none}
+.saving-badge.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-label">Project Boy Academy · Centro de Mando v6</div>
+  <h1 class="header-title">LANZAMIENTO <span style="color:var(--gold)">PBA</span></h1>
+  <p class="header-sub">Abre <strong>HOY</strong> cada mañana · ejecuta · palomea · anota ventas. Todo se guarda localmente. <span id="saving-inline" style="color:var(--amber);display:none">Guardando…</span></p>
+
+  <div class="cd-grid">
+    <div class="cd-box"><div class="cd-label">Cierre curso gratis</div><div class="cd-val" id="cd1">—</div></div>
+    <div class="cd-box"><div class="cd-label">Cierre Waitlist</div><div class="cd-val" id="cd2">—</div></div>
+    <div class="cd-box"><div class="cd-label">🔴 Masterclass YT Live</div><div class="cd-val" id="cd3">—</div></div>
+    <div class="cd-box"><div class="cd-label">CIERRE DE PUERTAS</div><div class="cd-val" id="cd4">—</div></div>
+  </div>
+
+  <div class="cash-box">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="cd-label">Cash del mes (automático)</div>
+        <div class="cash-num" id="cash-display">$654</div>
+      </div>
+      <div style="color:var(--mut);font-size:13px">🔴 Piso $7.4K · 🟡 Base $11.85K · 🟢 Meta $15.3K</div>
+    </div>
+    <div class="cash-bar-wrap">
+      <div class="cash-bar-fill" id="cash-fill" style="width:4%"></div>
+      <div class="cash-marker" style="left:46.4%;background:var(--mut)"><span class="cash-marker-label" style="color:var(--mut)">$7.4K</span></div>
+      <div class="cash-marker" style="left:74.3%;background:var(--amber)"><span class="cash-marker-label" style="color:var(--amber)">$11.85K</span></div>
+      <div class="cash-marker" style="left:96%;background:var(--green)"><span class="cash-marker-label" style="color:var(--green)">$15.3K</span></div>
+    </div>
+    <div class="cash-dx" id="cash-dx">⏳ Arrancando. La primera meta: 1 mentorship esta semana fundador.</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showTab('hoy')">📅 HOY (31 días)</button>
+    <button class="nav-btn" onclick="showTab('ba')">📚 Brand Architect</button>
+    <button class="nav-btn" onclick="showTab('stats')">📊 Stats</button>
+    <button class="nav-btn" onclick="showTab('norte')">🧭 Norte</button>
+    <button class="nav-btn" onclick="showTab('ofertas')">💰 Ofertas</button>
+    <button class="nav-btn" onclick="showTab('caja')">📋 Op. Caja</button>
+    <button class="nav-btn" onclick="showTab('playbooks')">🎤 Playbooks</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══════ HOY ═══════ -->
+<div class="section active" id="tab-hoy">
+  <h2 class="sec-title">El lanzamiento · día por día</h2>
+  <p class="sec-sub">Cada día: objetivo técnico · dolor/deseo del avatar · guion WPP word-for-word · qué se publica · YouTube · stories story por story · qué se graba · Marce · Joc · Brand Architect · checklist. Los guiones de nutrición son del PDF oficial.</p>
+  <div id="days-container"></div>
+</div>
+
+<!-- ═══════ BRAND ARCHITECT ═══════ -->
+<div class="section" id="tab-ba">
+  <h2 class="sec-title">Brand Architect · Currículum Completo</h2>
+  <p class="sec-sub">7 módulos — todos deben estar listos para el <strong style="color:var(--gold)">25 de junio</strong>. Módulos 2, 4, 6 = JOC. Módulos 1, 3, 5 = CHECO. Módulo 7 = AMBOS.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:18px">
+    <div class="stat-box">
+      <div class="cd-label">Progreso módulos</div>
+      <div id="ba-progress-val" class="stat-val" style="font-size:26px">0/7</div>
+      <div class="prog-bar"><div class="prog-fill" id="ba-progress-bar" style="width:0%"></div></div>
+    </div>
+    <div class="stat-box">
+      <div class="cd-label">CHECO hace</div>
+      <div class="stat-val" style="font-size:18px">1 · 3 · 5</div>
+      <div class="stat-sub">Deadline 20, 22, 24 jun</div>
+    </div>
+    <div class="stat-box">
+      <div class="cd-label">JOC hace</div>
+      <div class="stat-val" style="font-size:18px">2 · 4 · 6</div>
+      <div class="stat-sub">Deadline 20, 22, 24 jun</div>
+    </div>
+    <div class="stat-box">
+      <div class="cd-label">AMBOS hacen</div>
+      <div class="stat-val" style="font-size:18px">7</div>
+      <div class="stat-sub">Deadline 25 jun</div>
+    </div>
+  </div>
+
+  <div class="quote-box" style="margin-bottom:18px">⚡ <strong>REGLA DE ORO:</strong> Quien compre en la MC tiene que entrar a una Academy COMPLETA. Sin módulos = sin promesa. Sin promesa = lanzamiento roto. Checo audita el 25 jun entrando como alumno nuevo desde cero.</div>
+
+  <div style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:18px">
+    <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px">📐 EL RECORRIDO DEL ALUMNO (por qué este orden)</div>
+    <div style="font-size:12.5px;color:var(--mut);line-height:1.8">
+      <strong style="color:var(--txt)">M1 La Marca Personal</strong> → entiende el terreno donde va a trabajar<br>
+      <strong style="color:var(--txt)">M2 Contenido con Intención</strong> → entiende la estrategia detrás de cada pieza<br>
+      <strong style="color:var(--txt)">M3 Videos Cortos</strong> → aprende a crear el formato que más se pide<br>
+      <strong style="color:var(--txt)">M4 YouTube</strong> → aprende el formato que más autoridad construye<br>
+      <strong style="color:var(--txt)">M5 Stories</strong> → aprende a fidelizar y vender suave<br>
+      <strong style="color:var(--txt)">M6 Leer y Diagnosticar</strong> → aplica todo lo anterior para auditar a otros<br>
+      <strong style="color:var(--txt)">M7 El Brand Audit</strong> → entrega el documento que puede cobrar
+    </div>
+  </div>
+
+  <div id="ba-modules"></div>
+
+  <div class="sec-h3">Checklist de auditoría (Jun 25 — Checo entra como alumno nuevo)</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px">
+    <p style="font-size:13px;color:var(--mut);margin-bottom:12px">Entra a Skool como si fueras un alumno que acaba de pagar. Revisa cada módulo como si no lo hubieras hecho tú.</p>
+    <div id="ba-audit-checks"></div>
+  </div>
+</div>
+
+<!-- ═══════ STATS ═══════ -->
+<div class="section" id="tab-stats">
+  <h2 class="sec-title">Stats del lanzamiento</h2>
+  <p class="sec-sub">Ventas con +/−. Log de leads cada noche. Review de stories los domingos. Todo guardado localmente.</p>
+
+  <div class="sec-h3">💵 Ventas (el cash se calcula solo)</div>
+  <div class="stats-grid" id="ventas-grid"></div>
+
+  <div class="sec-h3">📍 Checkpoint · Leads diarios + CPL</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;margin-bottom:14px">
+      <div><div class="cd-label">Fecha</div><input type="date" class="input-field" id="lg-date"></div>
+      <div><div class="cd-label">Leads nuevos</div><input type="number" class="input-field" id="lg-leads" placeholder="0"></div>
+      <div><div class="cd-label">Gasto ads $</div><input type="number" class="input-field" id="lg-spend" placeholder="0"></div>
+      <div><div class="cd-label">Total grupo WPP</div><input type="number" class="input-field" id="lg-total" placeholder="0"></div>
+      <button class="btn-save" onclick="addLead()">Guardar</button>
+    </div>
+    <div class="stats-grid" id="lead-kpis"></div>
+    <table style="margin-top:14px"><thead><tr><th>Fecha</th><th>Leads</th><th>Gasto</th><th>CPL</th><th>Total grupo</th><th></th></tr></thead><tbody id="lead-table"></tbody></table>
+    <p style="color:var(--mut);font-size:12px;margin-top:8px">CPL sano: $0.50-1.00. Arriba de $1.50 = ese ad muere. Checkpoint 🟢 +600 leads (días 13-15) · 🟡 300-600 · 🔴 &lt;300</p>
+  </div>
+
+  <div class="sec-h3">📵 Ads · control de vida y muerte</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px">
+      <div><div class="cd-label">Nombre del ad</div><input type="text" class="input-field" id="ad-name" placeholder="Ad 03 - hook dependencia"></div>
+      <div><div class="cd-label">Estado</div><select class="input-field" id="ad-status"><option>🟢 Vivo</option><option>🟡 Vigilancia</option><option>🔴 Muerto</option><option>⭐ Ganador</option></select></div>
+      <button class="btn-save" onclick="addAd()">+</button>
+    </div>
+    <table><thead><tr><th>Ad</th><th>Estado</th><th></th></tr></thead><tbody id="ad-table"></tbody></table>
+    <p style="color:var(--mut);font-size:12px;margin-top:8px">Regla: 3 días sin jalar = 🔴 y su budget al ⭐. Los ⭐ dictan el batch 2 y los Shorts.</p>
+  </div>
+
+  <div class="sec-h3">📲 Stories · análisis semanal (domingos)</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;align-items:end;margin-bottom:12px">
+      <div><div class="cd-label">Semana de</div><input type="date" class="input-field" id="st-date"></div>
+      <div><div class="cd-label">Views 1ª story</div><input type="number" class="input-field" id="st-v1" placeholder="0"></div>
+      <div><div class="cd-label">Views última</div><input type="number" class="input-field" id="st-vf" placeholder="0"></div>
+      <div><div class="cd-label"># Respuestas</div><input type="number" class="input-field" id="st-resp" placeholder="0"></div>
+      <div><div class="cd-label">Calidad 1-10</div><input type="number" class="input-field" id="st-cal" placeholder="8"></div>
+      <button class="btn-save" onclick="addStory()">Guardar</button>
+    </div>
+    <table><thead><tr><th>Semana</th><th>Retención</th><th>Respuestas</th><th>Calidad</th><th>Veredicto</th><th></th></tr></thead><tbody id="story-table"></tbody></table>
+    <p style="color:var(--mut);font-size:12px;margin-top:8px">Retención sana: 70%+. Abajo de 50% = hook de la story 1 no jala. Analizar domingos, no diario.</p>
+  </div>
+</div>
+
+<!-- ═══════ NORTE ═══════ -->
+<div class="section" id="tab-norte">
+  <h2 class="sec-title">El Norte</h2>
+  <div class="stats-grid" style="margin-top:14px">
+    <div class="stat-box"><div class="cd-label">Ventana</div><div class="stat-val" style="font-size:22px">13 jun → 12 jul</div><div class="stat-sub">31 días. Cierre 23:59 MX</div></div>
+    <div class="stat-box"><div class="cd-label">Meta</div><div class="stat-val">$10K</div><div class="stat-sub">Base ~$11,850</div></div>
+    <div class="stat-box"><div class="cd-label">Masterclass</div><div class="stat-val" style="font-size:22px">Sáb 4 jul</div><div class="stat-sub">12 PM · YouTube Live</div></div>
+  </div>
+  <div class="sec-h3">El embudo</div>
+  <div style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;font-family:monospace;font-size:12px;overflow:auto;white-space:pre;color:#C9C9D2">ADS Meta ($500) ──┐
+                  ├─→ CURSO GRATIS WhatsApp ─→ NUTRICIÓN ─→ WAITLIST ─→ MASTERCLASS ─→ VENTA
+ORGÁNICO (CTAs) ──┘  "$1,000 en 3 meses"     (= el curso)   (filtro)   (YT live 4 jul)  $169 / $397-497</div>
+  <div class="quote-box">⚡ El grupo de WhatsApp SE VENDE como "curso gratis: $1,000 en 3 meses". La nutrición ES el curso. Ads SOLO al curso gratis — nunca directo a la MC.</div>
+  <div class="sec-h3">Las 10 Reglas de Oro</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px">
+    <ol style="padding-left:20px;display:grid;gap:7px;font-size:13.5px">
+      <li><strong>Anual primero, mensual plan B.</strong> Ticket alto al que califica.</li>
+      <li><strong>Ads SOLO al curso gratis.</strong> La MC se vende desde dentro del grupo.</li>
+      <li><strong>Ad muerto 3 días = apagado.</strong> Data de sem 1 dicta el batch 2.</li>
+      <li><strong>Se mide contra el BASE ($11.8K).</strong> $7-8K + MRR creciendo = máquina construida.</li>
+      <li><strong>Checkpoint mar 16</strong> = ajuste en caliente, no autopsia el día de la MC.</li>
+      <li><strong>Regla 96 hrs:</strong> nada se sube sin grabarse el fin anterior.</li>
+      <li><strong>Guiones:</strong> según objetivo del día + pilar, con idea-machine + script-master.</li>
+      <li><strong>Stories:</strong> un objetivo por secuencia, CTA solo al final.</li>
+      <li><strong>El cierre del 12 jul es REAL.</strong> La congruencia es el activo del lanzamiento 2.</li>
+      <li><strong>Dormir es parte del plan.</strong> Maratón, no sprint.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ═══════ OFERTAS ═══════ -->
+<div class="section" id="tab-ofertas">
+  <h2 class="sec-title">Ofertas & Mate</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:13px;margin-top:14px">
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px">
+      <span class="pill pill-gold">LOW TICKET</span>
+      <div style="font-family:'Archivo',sans-serif;font-size:28px;font-weight:900;margin:8px 0 4px">$37/mes · <span style="color:var(--gold)">$169 anual</span></div>
+      <p style="color:var(--mut);font-size:13px">Bonus anual: 50% off + TODOS los módulos día 1. Se ofrece PRIMERO en la MC — el mensual es plan B.</p>
+      <div class="sec-h3" style="font-size:13px">Cómo se vende</div>
+      <p style="font-size:13px">"Si entras hoy con el plan anual: $169 — pagas 4.5 meses, llevas 12 — y desbloqueas todo desde el día 1." En llamada: es el downsell natural si el Mentorship no es fit.</p>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px">
+      <span class="pill pill-red">HIGH TICKET</span>
+      <div style="font-family:'Archivo',sans-serif;font-size:28px;font-weight:900;margin:8px 0 4px">$397–497</div>
+      <p style="color:var(--mut);font-size:13px"><strong style="color:var(--txt)">Project Boy Mentorship</strong> — precio de validación. 3 cursos + 1:1 WPP + llamada mensual + grupales + revisión de activos. 12 semanas. Promesa: $3,000 en 90 días. 10-15 plazas.</p>
+      <div class="sec-h3" style="font-size:13px">Cómo se vende</div>
+      <p style="font-size:13px">SOLO en llamada. Bolsillo 400+ → $497; ajustado → $397. "Precio de cohorte fundadora; con los primeros casos sube a $997."</p>
+    </div>
+  </div>
+  <div class="sec-h3">El mate — 3 escenarios</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto">
+    <table>
+      <thead><tr><th>Escenario</th><th>Anual + mensual</th><th>Mentorship</th><th>Fundador (57)</th><th>MRR base</th><th>TOTAL</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill pill-red">🔴 Piso</span></td><td>~$4,500</td><td>2 ≈ $900</td><td>8 ≈ $1,350</td><td>$654</td><td><strong>~$7,400</strong></td></tr>
+        <tr style="background:var(--gold-dim)"><td><span class="pill pill-amber">🟡 BASE</span></td><td>~$6,900</td><td>4 ≈ $1,800</td><td>15 ≈ $2,500</td><td>$654</td><td><strong style="color:var(--gold)">~$11,850</strong></td></tr>
+        <tr><td><span class="pill pill-gray">🟢 Meta</span></td><td>~$8,500</td><td>7 ≈ $3,100</td><td>18 ≈ $3,000</td><td>$654</td><td><strong>~$15,300</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════ CAJA ═══════ -->
+<div class="section" id="tab-caja">
+  <h2 class="sec-title">Operación Caja · 39 leads</h2>
+  <div class="quote-box">💵 Un lead muerto revive con <strong>información nueva</strong>: precio que sube ($397→$997), cupo que cierra, bonus que desaparece. <strong style="color:var(--red)">CERO DMs de oferta del 21 jun a la MC.</strong></div>
+  <div class="stats-grid">
+    <div class="stat-box"><div class="cd-label">Total leads</div><div class="stat-val">39</div><div class="stat-sub">12 T1 · 12 T2 · 15 nuevos</div></div>
+    <div class="stat-box"><div class="cd-label">Cash esperado pre-MC</div><div class="stat-val" style="font-size:22px">$1.9-2.9K</div><div class="stat-sub">Semana fundador 16-20 jun</div></div>
+  </div>
+  <div class="sec-h3">4 Toques Track A · Lun 16 - Lun 23</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto">
+    <table><thead><tr><th>Toque</th><th>Día</th><th>Qué se dice</th><th>Tip</th></tr></thead><tbody>
+      <tr><td style="font-weight:700">T1</td><td>Lun 16</td><td>Pregunta binaria sin pitch: "¿Sigues queriendo facturar $3,000 o ya lo dejaste?"</td><td>ALEX PRIMERO</td></tr>
+      <tr><td style="font-weight:700">T2</td><td>Mié 18</td><td>Info nueva: cohorte fundadora $397-497 antes de $997 + nombrar SU objeción del historial</td><td>Personalizado</td></tr>
+      <tr><td style="font-weight:700">T3</td><td>Vie 20</td><td>Prueba + plan de pagos + "te digo derecho si es para ti"</td><td>Downsell al anual</td></tr>
+      <tr><td style="font-weight:700">T4</td><td>Lun 23</td><td>Cierre de ciclo — un no también cierra en paz</td><td>🔕 Silencio post</td></tr>
+    </tbody></table>
+  </div>
+  <div class="sec-h3">🔥 Tier 1 — Llamada Mentorship (12)</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px">
+    <p><span class="pill pill-red">PRIMERO</span> <strong> alex (ES)</strong> — RE-APLICÓ. Bolsillo 250-400. Ya domina Brand Architect, solo le faltan clientes.</p>
+    <p style="color:var(--mut);margin-top:6px">Jaden MX · Carlos J1Kl2MJ · Luis Edu Sonora · Fernando · Gia PE ($400 generados) · José MX · Nacho ES (el abuelo al Camp Nou) · Néstor PR ("no busco inspiración, busco resultados") · Carlos 7XX9099 · Pablo PE · leonel ("cansado de ser mediocre")</p>
+  </div>
+  <div class="sec-h3">🆕 Nuevos form junio (15)</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px">
+    <p>🅰️ <strong>A llamada directa:</strong> Benjamin Fuentes (CL, 500-1000 💰 bolsillo más alto) · Nicolas PE · Edgar MX · Carlos Gandara (+26, con negocio)</p>
+    <p style="color:var(--mut);margin-top:6px">🅱️ DM doble puerta: Matheo AR (re-aplicó) · Matías Ramón (3 aplicaciones — describió PBA como su solución ideal) · Jhailander · Adriel · David Torner · Samuel León · Danniel Gil · Brayan · Mateo Luna · Charly · Henry Loor</p>
+  </div>
+  <div class="sec-h3">🔕 EXCLUIDOS — Cero presión</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;color:var(--mut)">
+    Mateo GDL (duelo familiar) · Andryw (deudas agresivas, dijo 'no tengo dinero') · Santiago (papá endeudado)
+  </div>
+  <div class="sec-h3">✅ Cerrados — pedir testimonio</div>
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px">
+    julen (caso #1: 5K€) · Gael · José Gerardo · Elian · Carlos De La Rosa
+  </div>
+</div>
+
+<!-- ═══════ PLAYBOOKS ═══════ -->
+<div class="section" id="tab-playbooks">
+  <h2 class="sec-title">Playbooks</h2>
+  <div id="playbooks-container"></div>
+  <div class="quote-box" style="margin-top:18px">🙏 <em>"Todo lo que te venga a la mano para hacer, hazlo según tus fuerzas."</em> — Eclesiastés 9:10. Ejecuta el día que tienes enfrente. Dios se encarga del resto del calendario. Ardo sin gritar. 🦁</div>
+</div>
+
+</div><!-- /main -->
+
+<div class="saving-badge" id="saving-badge">💾 Guardado</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA — 31 DÍAS COMPLETOS
+// ═══════════════════════════════════════════════
+const MRR_BASE = 654;
+const PRICES = {men:37,anu:169,fun:169,m397:397,m497:497};
+const ESCENARIOS = {piso:7400,base:11850,meta:15300};
+const DNAMES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MONTHS = ['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+const DAYS = [
+{num:0,d:"2026-06-12",fase:"D0",pill:"gray",titulo:"DÍA 0 — PRODUCCIÓN TOTAL",
+obj:"Dejar TODO listo para que mañana solo ejecutes. No se lanza nada. La rana: grabar 8-10 ads + Marce confirma campaña Meta. Si hoy no grabas, mañana no hay campaña y el lanzamiento arranca cojo.",
+dolor:"—",deseo:"—",
+wpp:"— No se manda nada al grupo hoy. El grupo todavía no existe como 'curso'. —",
+wppVibe:"—",
+reel:"No se publica. Toda la energía va a grabar.",
+reelDolor:"—",reelAngulo:"—",reelPilar:"—",reelCTA:"—",reelFormato:"—",
+ytTema:"— (No se sube video. Se graba si da tiempo.)",
+stories:[],storiesObj:"Sin stories hoy.",
+graba:"8-10 ads Meta con energía real (el ad 12 grabado con cara de cansado quema budget igual). Si da tiempo: el video del sábado 'Cómo progresar más rápido que el 98%' para José.",
+marce:"Campaña Meta LISTA para disparar mañana: 8-10 creativos activos, $17-25/día (NO los 20 juntos — el algoritmo no aprende con menos de $1/día por ad), targeting 18-21, DESTINO = link al grupo de WhatsApp posicionado como 'curso gratis: $1,000 en 3 meses'.",
+joc:"Verificar que el grupo de WhatsApp esté listo: descripción = 'Curso gratuito: Cómo ganar tus primeros $1,000 en 3 meses'. Sin descripción, la gente entra sin expectativa y el grupo muere.",
+ba:"—",
+checks:["Drive organizado: BLOQUE_A_JOSE / BLOQUE_B_DAVID / BLOQUE_C_BATCH2 / YA_GRABADOS / FINALES_APROBADOS","Links de carpetas enviados a José y David","8-10 ads grabados con energía → crudos en sus carpetas","José edita sus 5 → FINALES_APROBADOS","David edita sus 5 → FINALES_APROBADOS","Confirmar con Marce: campaña lista para disparar mañana ✅","Dormir temprano — mañana arranca el maratón de 30 días"]},
+
+{num:1,d:"2026-06-13",fase:"F1",pill:"gold",titulo:"DÍA 1 — EL ESPEJO DE LA REALIDAD",
+obj:"Romper la ilusión de productividad pasiva. Pasar al avatar de Conciencia 0 a Conciencia 1: consumir contenido NO es progresar. El tono del mes se marca HOY. Energía máxima.",
+dolor:"El síndrome del ambicioso inútil: tienes potencial, cero evidencia. Te crees distinto por ver videos de mentalidad, pero tus bolsillos están igual de vacíos.",
+deseo:"Dejar de ser un espectador con delirios de grandeza. Tener estructura y dirección real.",
+wpp:`"Tienes un problema muy grave y te lo voy a decir en la cara. Te crees distinto a los demás porque te la pasas viendo videos de mentalidad, de cómo hacer dinero y tener disciplina. Te sientes 'el ambicioso' del grupo... pero miremos tu realidad. Llevas meses guardando tiktoks, armando planes en tu cabeza y sintiéndote 'inteligente pero inútil'. La dura verdad es que consumir contenido no te hace un emprendedor, te hace un simple espectador con delirios de grandeza. Tu problema no es que te falten ganas; es que te falta estructura y una maldita dirección. ¿La única solución real? Dejar de intentar 'motivarte' y empezar a instalar un sistema en tu día a día que te obligue a ejecutar. Si estás listo para dejar de prometerte que 'mañana sí empiezas' y quieres esa estructura, comenta la palabra 'REALIDAD' y te voy a mandar por DM el acceso a mi grupo privado de WhatsApp. Ahí adentro voy a soltar el mapa. Entra ahora."`,
+wppVibe:"Grabado de noche, cuarto a media luz, sentado frente a la computadora. Mirada penetrante, tono bajo pero firme. CERO música motivacional — solo tu voz y silencio.",
+reel:"Reel/TikTok de alto impacto. Replicas el bardo del WPP en formato corto viral. Llevas al bio → link al grupo.",
+reelDolor:"Consumir contenido de emprendimiento te hace sentir que avanzas, pero tus bolsillos siguen vacíos.",
+reelAngulo:"El síndrome del ambicioso inútil",
+reelPilar:"🩹 Autoridad (el dolor es el setup, TÚ eres el payoff)",
+reelCTA:"Comenta REALIDAD → DM automático con el link",
+reelFormato:"Reel/TikTok · noche · voz baja y firme",
+ytTema:"'Cómo progresar más rápido que el 98%' — correlaciona consumo vs ejecución. Descripción con link al grupo. 1er video del lanzamiento para los 40K dormidos de YouTube.",
+stories:[
+{n:1,tipo:"Hook vulnerable",copy:"'Esto no se lo había dicho a nadie de mi edad…'",img:"Selfie luz natural, expresión seria",cta:"SIN CTA — primero se gana el derecho"},
+{n:2,tipo:"Origen del problema",copy:"Tu yo de antes — el scroll, la dependencia, el morro con potencial que no ejecutaba",img:"Foto vieja o BTS íntimo",cta:"SIN CTA"}
+],
+storiesObj:"🟪 TRÁFICO (6 stories) — Stories 1-2 de 6. Captar atención con vulnerabilidad. SIN CTA todavía.",
+graba:"Si no quedó ayer: video de YT. PM: batch del fin de semana ('Adicto al celular' para lun 15 + 'Cuando te interesa todo' para vie 19).",
+marce:"🚀 DISPARAR CAMPAÑA. Verificar que los 8-10 ads corran y el link del grupo funcione. Noche: primer vistazo al CPL. Si alguno supera $1.50 o 0 clics → marcarlo en rojo en Stats → Ads.",
+joc:"Monitorear que los nuevos entren bien al grupo. Si hay bugs técnicos, resolver HOY — el primer día no puede caerse.",
+ba:"Módulo 1 (CHECO) — arranca. Deadline Jun 20.",
+checks:["Reel publicado IG con CTA 'comenta REALIDAD'","Video YT arriba con link al grupo en descripción","Mensaje Día 1 enviado al canal WPP a los 800 existentes","Stories 1-2 de la secuencia Tráfico subidas (SIN CTA)","Campaña Meta corriendo ✅ — Marce confirma","Repost del Reel a TikTok con link en bio","Leads del día registrados en Stats antes de dormir"]},
+
+{num:2,d:"2026-06-14",fase:"F1",pill:"gold",titulo:"DÍA 2 — LA IDENTIDAD ROTA",
+obj:"Atacar el dolor de la falta de constancia y el ciclo tóxico de empezar y abandonar a los 3-7 días. El avatar reconoce su patrón de autoengaño.",
+dolor:"Identidad fracturada: cada vez que dices 'hoy sí empiezo' y a los tres días lo dejas, te estás traicionando. Tu palabra no vale nada.",
+deseo:"Confiar en sí mismo. Cumplir una promesa. Volver a respetarse.",
+wpp:`"Ayer mucha gente me escribió diciendo 'bro, es que quiero emprender pero siempre abandono a los pocos días'. Escúchame bien: tu problema no es que seas flojo o que te falte tiempo. Tu problema es que tienes una identidad fracturada. Cada vez que dices 'hoy sí empiezo' y a los tres días lo dejas, te estás traicionando a ti mismo y demostrando que tu palabra no vale nada. ¿Cómo se arregla esto? No es con 'hacks' de disciplina. Es bajando la dificultad, diseñando bloques de enfoque diarios y cumpliendo una sola tarea innegociable hasta que vuelvas a confiar en ti. En unos días, dentro de mi comunidad de WhatsApp, voy a revelar el paso a paso para instalar este sistema anti-abandono. El link para entrar gratis está en mi bio. Entra antes de que lo cierre y te quedes en el mismo ciclo de siempre."`,
+wppVibe:"Formato selfie caminando por la calle de día. Ropa sobria (estilo clean, masculino, Project Boy). Dinámico, movido, mostrando energía real.",
+reel:"Reel Conexión — el ciclo tóxico de empezar y abandonar. Que el avatar se vea en el espejo.",
+reelDolor:"Identidad fracturada: sabes que si empiezas algo hoy, la semana que viene lo dejas tirado.",
+reelAngulo:"El autoengaño de la falta de motivación",
+reelPilar:"🩹 Conexión (toca la herida directamente)",
+reelCTA:"Link en bio → grupo gratis",
+reelFormato:"Historia de Instagram a cámara — hablándole directo a tu audiencia actual",
+ytTema:"— (Domingo de batch. No se sube video, se graban los de la semana.)",
+stories:[
+{n:3,tipo:"Amplificación del dolor",copy:"Cómo empeoró — la deuda, el asco de no aportar nada real",img:"Foto íntima o de contexto que evoque el momento",cta:"SIN CTA"},
+{n:4,tipo:"Punto de quiebre",copy:"La decisión que lo cambió todo — el momento de decir 'ya basta'",img:"BTS o foto significativa de transición",cta:"SIN CTA"}
+],
+storiesObj:"🟪 TRÁFICO (6 stories) — Stories 3-4 de 6. Amplificar el dolor antes del punto de quiebre.",
+graba:"🎬 BATCH CRÍTICO (la regla 96hrs se gana o pierde HOY): 'Adicto al celular' (sube lun 15) + 'Cuando te interesa todo' (sube vie 19). Subirlos a Drive → avisar a David.",
+marce:"Revisar CPL del día 1. ¿Algún ad con CPL >$1.50 o 0 clics en 24hrs? Marcarlo en Stats → Ads.",
+joc:"—",
+ba:"Módulo 1 (CHECO) + Módulo 2 (JOC) — deadline Jun 20.",
+checks:["Reel + repost TikTok","Mensaje Día 2 al canal WPP","Stories 3-4 subidas","🎬 'Adicto al celular' grabado → Drive → David","🎬 'Cuando te interesa todo' grabado → Drive → David","Stats: leads del día registrados"]},
+
+{num:3,d:"2026-06-15",fase:"F1",pill:"gold",titulo:"DÍA 3 — EL MIEDO A LA DEPENDENCIA",
+obj:"Tocar la llaga de la dependencia económica. Mostrar que el estatus real se gana generando ingresos propios. El avatar siente asco de su propia situación.",
+dolor:"Hablas de libertad financiera en redes, pero tienes que pedirle permiso a tus papás para comprarte ropa.",
+deseo:"Ganar tu propio dinero. Salir de la dependencia. Que tu familia te respete.",
+wpp:`"Te voy a decir algo que te va a doler el ego. Hablas de ser millonario a los 25, pero hoy sigues pidiéndole plata a tus papás para salir el fin de semana. Vives bajo sus reglas porque vives de su dinero. Eso no te hace libre, te hace dependiente. Quieres respeto y presencia, pero el respeto se construye generando resultados, no aparentando. ¿Cuál es la salida? Necesitas una forma realista de hacer dinero siendo joven. Y la solución no es armar un e-commerce complejo; la solución es aprender una habilidad técnica y operarla para negocios que ya facturan. En el link de mi perfil dejé la entrada al grupo de WhatsApp donde voy a mostrar exactamente cómo funciona este vehículo. Si quieres dejar de ser un niño mantenido, el link está ahí. Acción."`,
+wppVibe:"Sentado en tu auto o cafetería estética. Tono serio, de advertencia, casi como un regaño de hermano mayor.",
+reel:"Reel + Carrusel atacando el dolor de dependencia. Alto impacto con CTA directo.",
+reelDolor:"Hablas de libertad financiera pero tienes que pedirle permiso a tus papás para todo.",
+reelAngulo:"El niño mantenido que sueña con ser millonario",
+reelPilar:"🩹 Conexión",
+reelCTA:"Link en bio → grupo gratis",
+reelFormato:"Reel + Carrusel en Instagram",
+ytTema:"Sube: 'Adicto al celular' (grabado el domingo, editado por David). Descripción con link al grupo.",
+stories:[
+{n:5,tipo:"Aprendizaje clave",copy:"'Consumir no es progresar. Lo que te falta es estructura, no ganas'",img:"Texto sobre fondo oscuro o selfie sobrio",cta:"SIN CTA"},
+{n:6,tipo:"CTA suave — CIERRE DE SECUENCIA ✅",copy:"'Armé un curso GRATIS: cómo ganar tus primeros $1,000 en 3 meses. Comenta REALIDAD'",img:"Selfie + sticker de respuesta rápida",cta:"Comenta REALIDAD → link al grupo"}
+],
+storiesObj:"🟪 TRÁFICO (6 stories) — Stories 5-6 de 6. CIERRA la primera secuencia con el primer CTA real.",
+graba:"Entre exámenes: ads 11-15 del batch 2 (bloques de 5, mismo setup).",
+marce:"Preparar form de investigación para mandarlo el lunes 16 (5 preguntas: ¿cerraste cliente? ¿cuánto facturaste? ¿qué te frena? ¿seriedad 1-10? ¿capacidad de pago?). Contar leads acumulados días 1-3 para el CHECKPOINT de mañana.",
+joc:"Recordatorio: pasarela del anual $169 — deadline miércoles sin falta.",
+ba:"Módulo 1 (CHECO) + Módulo 2 (JOC) — deadline Jun 20.",
+checks:["Reel + Carrusel publicados + repost TikTok","Video YT 'Adicto al celular' arriba con link al grupo","Mensaje Día 3 al canal WPP","Stories 5-6 subidas (secuencia TRÁFICO COMPLETA ✅)","Ads 11-15 grabados si dio el día","Stats: leads capturados para el checkpoint de mañana"]},
+
+{num:4,d:"2026-06-16",fase:"F1",pill:"red",titulo:"DÍA 4 — CAOS DE INFORMACIÓN + 📍 CHECKPOINT + ARRANCA OP. CAJA",
+obj:"Destruir las falsas creencias sobre cómo empezar. Preparar el terreno para el vehículo único. SIMULTÁNEAMENTE: checkpoint de leads días 1-3 (decide si ajustas la campaña) + Marce dispara el form + TOQUE 1 a los 39 leads (alex PRIMERO).",
+dolor:"La parálisis por análisis. Eres acumulador de información. Guardas guías que jamás aplicarás porque te aterra empezar.",
+deseo:"Tener un mapa claro y simple. Emprender sin confusión.",
+wpp:`"Estás completamente paralizado. Tienes tu feed lleno de gurús diciéndote que hagas dropshipping, trading, agencias... y mientras más consumes, más te confundes. Estás esperando la 'idea perfecta' para empezar y el miedo a equivocarte te tiene en cero. Te lo resumo rápido: la solución a tu parálisis es el enfoque ciego. Un joven no necesita empezar por su gran negocio millonario; necesitas aprender UNA sola habilidad de alto valor y aplicarla sin mirar a los lados. Voy a hacer una clase privada explicando cuál es esta habilidad y cómo dominarla. Comenta la palabra 'HABILIDAD' y te mando por DM tu pase de entrada al grupo donde va a pasar todo."`,
+wppVibe:"Pantalla verde (Green Screen) mostrando de fondo un mar de miniaturas genéricas de YouTube sobre 'cómo hacerte rico'.",
+reel:"Reel viral libre — hook amplio para alcance frío. No se alinea al dolor: su trabajo es traer ojos nuevos.",
+reelDolor:"—",reelAngulo:"'3 apps para ganar dinero siendo joven' — viral libre",
+reelPilar:"🔥 Viral",reelCTA:"Link en bio",reelFormato:"Reel viral",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Espejo del día",copy:"Replicar el ángulo del WPP — el caos de información paralizante",img:"BTS o green screen",cta:"SIN CTA"},
+{n:2,tipo:"Countdown con urgencia",copy:"'El curso gratis cierra el jueves a medianoche' — urgencia real",img:"Countdown sticker sobre fondo oscuro",cta:"Link al grupo sticker"}
+],
+storiesObj:"Countdown sticker. Primera urgencia real del lanzamiento.",
+graba:"Ads 16-20 del batch 2 si faltan.",
+marce:"📨 FORM a 800 WPP + 57 miembros. TOQUE 1 a Tier 1 y Tier 2 (ALEX PRIMERO — ya re-aplicó con bolsillo 250-400). Primer contacto a los 4 nuevos 🅰️. Reportar CHECKPOINT a Checo.",
+joc:"⏰ Mañana vence la pasarela del anual $169. Confirmar que va a estar lista.",
+ba:"Módulo 2 (JOC) — continuar.",
+checks:["Reel viral publicado + repost TikTok","Mensaje D4 (Caos de Info) al canal WPP","Stories countdown subidas","📍 CHECKPOINT revisado en Stats — semáforo aplicado (🟢 +600 / 🟡 300-600 / 🔴 <300)","Form disparado a 800+57 ✅","TOQUE 1 enviado a los 39 leads (alex PRIMERO) ✅","Si checkpoint 🔴: budget redistribuido al ad ganador HOY"]},
+
+{num:5,d:"2026-06-17",fase:"F1",pill:"gold",titulo:"DÍA 5 — LA REVELACIÓN DEL VEHÍCULO (HYPE)",
+obj:"Presentar oficialmente la oportunidad de 'Operar Marcas Personales'. El dinero real lo hacen los operadores detrás de cámara. Joc entrega la pasarela del anual HOY — sin ella la ola fundador de mañana no tiene a dónde cobrar.",
+dolor:"Estás intentando ser influencer para ganar estatus barato, cuando el verdadero dinero lo hacen los operadores detrás de escena.",
+deseo:"Cobrar facturas en dólares reales. Ser el experto en sistemas, no en cámara.",
+wpp:`"Todo el mundo de tu edad está obsesionado con verse bien en cámaras e intentar volverse famoso. Es un juego de egos. Mientras ellos se frustran por likes, hay un grupo muy pequeño de adolescentes cobrando facturas en dólares reales. ¿Cómo? Convirtiéndose en Operadores de Marcas Personales. Es la habilidad definitiva: aprendes a crear, crecer y operar las marcas de personas que ya tienen dinero pero no tienen tiempo. No necesitas ser experto en cámara, necesitas ser experto en sistemas. Esa es la llave. Estoy armando la ruta exacta de 90 días en mi grupo de WhatsApp para pasar de cero a tus primeros dólares operando marcas. Quedan pocos lugares. Haz clic en el link de mi bio para asegurar tu puesto."`,
+wppVibe:"En tu setup de trabajo. De fondo brevemente un calendario de Notion o software de edición — eres operador técnico real.",
+reel:"Reel de contraste espectador vs constructor. Polarización pura.",
+reelDolor:"—",reelAngulo:"'Cómo ser bueno en todo' — contraste espectador/constructor",
+reelPilar:"🩹 Autoridad",reelCTA:"Link en bio",reelFormato:"Reel hablando de pie, agresivo pero calmado",
+ytTema:"—",
+stories:[
+{n:1,tipo:"BTS operando",copy:"Tú trabajando en tu setup — operador real, no teórico",img:"Captura del Notion o setup de trabajo",cta:"SIN CTA"},
+{n:2,tipo:"Countdown urgente",copy:"'El curso gratis cierra mañana a medianoche'",img:"Countdown sticker",cta:"Link al grupo sticker"}
+],
+storiesObj:"BTS de ti operando (prueba de constructor) + countdown 'cierra mañana'.",
+graba:"Lo que falte del batch 2 de ads.",
+marce:"Segmentar respuestas del form: 🟢 candidato Mentorship → llamada · 🟡 anual fundador → DM · 🔴 reactivación. Agendar llamadas para mié-vie.",
+joc:"🚨 ENTREGAR pasarela anual $169 HOY — sin esto no hay ola fundador mañana.",
+ba:"Módulo 1 (CHECO) — revisar avance. Deadline Jun 20.",
+checks:["Reel + repost TikTok","Mensaje Día 5 al canal WPP","Stories BTS + countdown","Form segmentado: tabla 🟢🟡🔴 lista","Llamadas agendadas para mié-vie","Pasarela anual $169 VIVA ✅ — Joc confirma"]},
+
+{num:6,d:"2026-06-18",fase:"F1",pill:"red",titulo:"DÍA 6 — EL CONTRASTE + ULTIMÁTUM + ARRANCA OLA DE DINERO 💰",
+obj:"Polarización pura: definir la cultura de PBA repeliendo al anti-avatar. Forzar la decisión de unirse al grupo (cierra hoy a medianoche). SIMULTÁNEAMENTE: primeras llamadas Mentorship + DMs anual fundador + TOQUE 2. Desde hoy: MODO FULL.",
+dolor:"Si te ofendes fácilmente y crees que el mundo te debe algo, sigue scrolleando. Filtramos a los débiles.",
+deseo:"Ser un Constructor. Pertenecer a un entorno donde se ejecuta.",
+wpp:`"Hay dos tipos de personas viendo esto. Los 'Espectadores', que son los que se van a enojar, van a poner excusas y seguirán con su vida mediocre consumiendo motivación. Y los 'Constructores'. Jóvenes con hambre real, cansados del caos mental y que buscan un sistema. Mi academia no es para víctimas ni conformistas. Es un entorno para gente que viene a aprender una habilidad dura, a organizar su semana sin procrastinar y a ejecutar. Si eres un espectador, desliza y vete. Si eres un constructor, la puerta del grupo de WhatsApp se cierra mañana. Entra al link de mi perfil o quédate mirando desde afuera cómo los demás avanzan."`,
+wppVibe:"De pie, agresivo pero calmado. Lenguaje corporal seguro e imponente.",
+reel:"Reel viral con el material de 'Un millonario salió con su esposa' — raw footage listo ✅",
+reelDolor:"—",reelAngulo:"'Un millonario salió con su esposa' — viral libre con raw footage",
+reelPilar:"🔥 Viral",reelCTA:"—",reelFormato:"Reel con raw footage · editar y subir",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Hook (mini-venta S1/3)",copy:"'Algo está a punto de cerrarse…' + sticker de pregunta '¿ya entraste?'",img:"Selfie o texto impactante",cta:"Sticker de pregunta"},
+{n:2,tipo:"Qué incluye (S2/3)",copy:"Lo que incluye el curso gratis + por qué es diferente a ver videos sueltos",img:"Captura del grupo o texto",cta:"SIN CTA"},
+{n:3,tipo:"CTA + countdown (S3/3)",copy:"Countdown a medianoche + 'si entras ahora tienes acceso completo'",img:"Countdown sticker + link",cta:"Link al grupo"}
+],
+storiesObj:"🟦 VENTAS mini (3 stories) — primera vez vendiendo por stories. El curso cierra HOY a medianoche.",
+graba:"—",
+marce:"📞 PRIMERAS LLAMADAS de Mentorship ($397/$497 según bolsillo; downsell al anual en la misma llamada si no es fit). DMs de anual fundador a los 🟡. TOQUE 2 (info nueva + su objeción específica del historial).",
+joc:"Disponible para links de pago durante las llamadas.",
+ba:"Módulo 2 (JOC) — deadline Jun 20 se acerca.",
+checks:["Reel viral + repost TikTok","Mensaje D6 (Contraste) al canal WPP","Carrusel Manifiesto publicado","Stories de ventas (3) subidas","Primeras llamadas Mentorship hechas","DMs anual fundador enviados","TOQUE 2 enviado a los 39 leads","Stats: ventas del día"]},
+
+{num:7,d:"2026-06-19",fase:"F1",pill:"gold",titulo:"DÍA 7 — EL ULTIMÁTUM DE ENTRADA",
+obj:"Escasez real del embudo orgánico. Forzar la decisión inmediata de unirse al grupo. Última llamada antes de que arranque la Fase 2. A medianoche, el acceso 'se cierra'.",
+dolor:"Estás a un paso de volver a tu rutina de scroll, dopamina y arrepentimiento nocturno.",
+deseo:"Entrar antes de que sea tarde. No quedarse afuera.",
+wpp:`"Último aviso. Hoy a la medianoche cierro el acceso al grupo privado. Ya te expliqué por qué estás estancado, por qué te falta constancia y cómo aprender a operar marcas personales es tu única vía realista para escapar de la dependencia. A partir de mañana, adentro del grupo, dejo de hablar de los problemas y empiezo a soltar las soluciones reales: los sistemas operativos. Tienes dos opciones: te quedas ahí scrolleando, sintiéndote el 'chico con potencial' que nunca logró nada, o le das clic al enlace de mi bio, entras al grupo y empiezas a construirte como alguien que se respeta. La decisión es tuya. Nos vemos adentro."`,
+wppVibe:"Selfie puro, crudo, sin edición, directamente desde tu teléfono. Urgencia y límite real.",
+reel:"Reel Conexión — 'Cómo ser exitoso cuando te interesa todo'",
+reelDolor:"Cansado de no avanzar pese a toda la información que consumes",
+reelAngulo:"'te interesa todo pero no terminas nada' — Conexión",
+reelPilar:"🩹 Conexión",reelCTA:"Link en bio",reelFormato:"Reel selfie caminando",
+ytTema:"Sube: 'Cómo ser exitoso cuando te interesa todo' (grabado el domingo, editado por David). Link al grupo en descripción.",
+stories:[
+{n:1,tipo:"8 AM — 'Último día'",copy:"Recuerda que hoy cierra el acceso al curso gratis",img:"Texto + horas restantes",cta:"Link al grupo"},
+{n:2,tipo:"Mediodía — Countdown",copy:"Quedan X horas — urgencia creciente",img:"Countdown sticker",cta:"Link al grupo"},
+{n:3,tipo:"Noche — Ultimátum final",copy:"'Hoy a medianoche. Última llamada.' — fuerza la decisión ahora",img:"Countdown + texto dramático",cta:"Link al grupo URGENTE"}
+],
+storiesObj:"Historias con countdown timer todo el día — 3 momentos: mañana / mediodía / noche.",
+graba:"—",
+marce:"Seguimiento de llamadas. Cada 'sí' → link + bienvenida. CPL diario.",
+joc:"Módulos 1 y 2 en proceso. Revisión de avance.",
+ba:"Módulos 1 y 2 — fecha límite Jun 20 (MAÑANA).",
+checks:["Reel + repost TikTok","Video YT 'Cuando te interesa todo' arriba","Mensaje D7 (Ultimátum) al canal WPP","Stories countdown x3 (mañana/mediodía/noche)","Llamadas/DMs de seguimiento","Ventas y leads en Stats"]},
+
+{num:8,d:"2026-06-20",fase:"F2a",pill:"purple",titulo:"DÍA 8 — BIENVENIDOS AL QUIRÓFANO + 🎬 MEGA BATCH DÍA 1",
+obj:"Seteo de cultura: filtrar turistas, clavar las 4 reglas innegociables, mostrar autoridad a través de la historia de Checo ($15-20K a los 13, FIFA Points). Cambio de registro: ya no atraes, ENTREGAS. SIMULTÁNEAMENTE: el día de producción más importante — grabar los largos de nutrición.",
+dolor:"El síndrome del 'inteligente pero inútil'. Tienes potencial pero no ejecutas nada.",
+deseo:"Pertenecer a un entorno de alto rendimiento. Dejar de ser una promesa vacía.",
+wpp:`"Bienvenidos a los que lograron entrar. Les voy a dejar la regla número uno de este grupo muy clara: aquí no van a encontrar motivación barata. A mis 13 años, trabajando como actor, llegué a tener entre 15,000 y 20,000 dólares en mi cuenta bancaria. Tenía el 'éxito' que ustedes sueñan hoy. ¿Y saben qué pasó? Me sentía intocable, pero era un imbécil. Me gasté todo en FIFA Points y tonterías de Fortnite. En el colegio era el 'payaso del grupo', sacando 6 o 7, gritando en las mesas solo para no sentirme invisible. Sabía que tenía potencial, pero mi ejecución era mediocre. Era el rey de los 'inteligentes pero inútiles'. A partir de hoy, en este grupo, ese ciclo se muere. Las 4 reglas innegociables: 1. FIJA el maldito grupo arriba de todo ahora mismo. 2. CERO Espectadores: si viniste a 'ver qué onda', salte. 3. PREPÁRATE y aplica todo lo que voy a soltar. 4. PUNTUALIDAD total el día de la clase — el link solo llega por aquí. Si estás listo para dejar de ser una promesa vacía, comenta 'CONSTRUCTOR'. Los leo a todos."`,
+wppVibe:"Video selfie, iluminación cruda. Mirada penetrante. Postura firme — instrucciones militares antes de una misión.",
+reel:"Reel viral de alto alcance.",
+reelDolor:"—",reelAngulo:"'2 jóvenes despiertan un lunes' — contraste de rutinas (viral)",
+reelPilar:"🔥 Viral",reelCTA:"Link en bio",reelFormato:"Reel viral",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Hook + contexto (Posicionamiento S1/14)",copy:"Quién eres y de dónde vienes — operador real, no teórico",img:"Selfie sobrio + texto",cta:"SIN CTA"},
+{n:2,tipo:"Tu operación real (S2/14)",copy:"Lo que haces día a día — no lo que dices, lo que haces",img:"BTS de trabajo real (Notion, edición)",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO (14 stories repartidas D8-D16) — Arrancan HOY con stories 1-2. Sin CTA — se construye autoridad.",
+graba:"🎬 MEGA BATCH DÍA 1: Largo 1 'Hackeando la Atención' (12 min) + Largo 2 'Prospección sin rogar' (15 min) + YT sem 3 'Si eres ambicioso pero procrastinas'. TODO a Drive, avisar a David.",
+marce:"TOQUE 3 preparado para mañana (prueba + plan de pagos). Revisar qué ads rotar en semana 2 (⭐ ganan).",
+joc:"PDF Manifiesto Project Boy anclado en el grupo como primer mensaje fijado ✅.",
+ba:"Módulos 1 y 2 — DEADLINE HOY Jun 20.",
+checks:["Reel + repost","Mensaje Quirófano + PDF Manifiesto anclado ✅","Stories posicionamiento 1-2","🎬 Largo 1 'Hackeando la Atención' grabado","🎬 Largo 2 'Prospección sin rogar' grabado","🎬 YT 'Procrastinas' grabado","TODO subido a Drive → David avisado"]},
+
+{num:9,d:"2026-06-21",fase:"F2a",pill:"purple",titulo:"DÍA 9 — LA DEUDA Y EL DESGASTE + 🎬 MEGA BATCH DÍA 2",
+obj:"Destruir la objeción de la dependencia económica. El inmovilismo es egoísmo puro. La historia de la deuda de mamá + la abuela (150K pesos, speedruns). SIMULTÁNEAMENTE: cerrar el batch — Largos 3-4 a David. Con esto tiene 8+ días de colchón.",
+dolor:"Tu familia se rompe la espalda mientras tú juegas a ser empresario en tu cabeza.",
+deseo:"Usar la rabia de la situación para obsesionarse con cambiarla. Aportar valor real.",
+wpp:`"Ayer les hablé de la basura que era mi vida. Miren, yo me pasaba las tardes encerrado en mi cuarto, enviciado a un nivel que hoy me da asco. Llegué al punto de hacer 'speedruns' cronometrados justo antes de que el autobús de Fortnite soltara a los jugadores. Esa era la dopamina barata que me controlaba. Pero la vida te cobra factura. Un día, agarré el celular de mi mamá por azar y vi algo que me heló la sangre: tenía una deuda de 150,000 pesos. Ella había sacrificado su propia carrera, viajó conmigo a España y a Uruguay para apoyar mis sueños, y ahora cargaba con ese peso en silencio mientras yo me gastaba la plata en tonterías. Y por si fuera poco, veía a mi abuela de 68 años con los cartílagos rotos, sin dormir, cuidando 24 horas al día a un familiar que tiene la edad cerebral de un bebé de 9 meses. Y yo ahí, sin aportar absolutamente nada de valor a la mesa. Ese día sentí asco de mí mismo. Sé que muchos de ustedes sienten esa ansiedad de 'quiero emprender', pero siguen viviendo bajo las reglas de sus papás porque ellos les pagan todo. Se los digo en la cara: ¿Cómo te atreves a soñar con ser millonario si eres un nene mantenido que deja que su familia cargue con todo el peso? Usé esa rabia para obsesionarme con retirarlos. Si hoy tú no estás facturando y sigues scrolleando mientras tus papás se rompen la espalda, no eres una víctima del sistema, eres un egoísta. Tienen que despertar."`,
+wppVibe:"Audio largo (Voice Note) o video en entorno oscuro/íntimo. Tono reflexivo, crudo, con rabia contenida.",
+reel:"Reel Autoridad — 'Top 5 nichos para Brand Architects jóvenes'",
+reelDolor:"No saber qué nicho elegir",reelAngulo:"'Top 5 nichos' — autoridad técnica de operador",
+reelPilar:"🩹 Autoridad",reelCTA:"Link en bio",reelFormato:"Reel de autoridad técnica",
+ytTema:"—",
+stories:[
+{n:3,tipo:"Caso real / operación (S3/14)",copy:"Captura de un cliente contento o resultado real del trabajo operando marcas",img:"Captura de resultado real (no stock)",cta:"SIN CTA"},
+{n:4,tipo:"Otra prueba real (S4/14)",copy:"Otro resultado o momento de la operación real del día",img:"BTS de trabajo",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO — Stories 3-4/14. Casos reales. Sin CTA.",
+graba:"🎬 MEGA BATCH DÍA 2: Largo 3 'El Onboarding' (15 min) + Largo 4 'El Ultimátum' (12 min) → TODO a David.",
+marce:"TOQUE 3: prueba + plan de pagos. Tabla semana fundador: cierres, downsells, leads al funnel.",
+joc:"—",
+ba:"Módulo 3 (CHECO) + Módulo 4 (JOC) — ARRANCAN HOY. Deadline Jun 22.",
+checks:["Reel + repost","Voice note La Deuda enviado al canal WPP","Stories posicionamiento 3-4","🎬 Largo 3 'Onboarding' grabado","🎬 Largo 4 'Ultimátum' grabado","BATCH COMPLETO → David ✅ (tiene 8+ días)","Review semanal stories en Stats"]},
+
+{num:10,d:"2026-06-22",fase:"F2a",pill:"purple",titulo:"DÍA 10 — EL EGO Y EL NEPO BABY + SEMANA 2 DE ADS",
+obj:"Atacar el dolor de sentirse invisible y la comparación destructiva. La historia del Nepo Baby + Halloween + reset de identidad. Semana 2 de ads: rotación con los ángulos ⭐.",
+dolor:"Te pasas horas en Instagram comparándote con pibes que tienen dinero. Intentas verte bien pero no tienes valor real.",
+deseo:"Ser magnético por resultados, no por apariencia. Ganar el respeto real.",
+wpp:`"Veo a muchísimos de ustedes perdiendo horas en Instagram, comparándose con pibes que tienen dinero o físico, e intentando subir historias calculadas solo para llamar la atención de las niñas y sentir que valen algo. Quieren sentirse magnéticos y dejar de ser invisibles. Yo también jugué ese juego de perdedores. En junio de 2025, la chica que amaba me dejó por un 'partidazo'. Me dejó por un 'Nepo Baby', el hijo del actor famoso. Me destrozó el ego en mil pedazos. Esa noche me miré al espejo y tuve que tragarme la verdad más humillante de todas: 'Aún no soy el hombre que las mujeres eligen'. Tratando de compensar ese vacío, en Halloween toqué fondo. Por puro ego, intenté ligar con 8 niñas al mismo tiempo en una fiesta. El chisme explotó, todas se enteraron, me acorralaron, me gritaron 'puto' y quedé humillado frente a todo el mundo. Volví a mi casa destruido, miré al cielo y me dije: '¿Qué putas estoy haciendo con mi vida? Espabila'. Esa misma noche borré Snapchat, Instagram y TikTok, y desaparecí un mes entero de las redes. Ahí entendí algo que ustedes deben grabarse a fuego: el atractivo y el respeto no se fingen. Se ganan cuando eres magnético por tus resultados. Esa noche de Halloween tomé una decisión que cambió mi cuerpo y mis finanzas para siempre."`,
+wppVibe:"Video caminando en la calle de día. Limpio, ropa sobria, demostrando estatus alto, seguridad y presencia física.",
+reel:"Reel viral de alto alcance — hook general que jale frío.",
+reelDolor:"—",reelAngulo:"'Cómo ser bueno en TODO' — viral libre",
+reelPilar:"🔥 Viral",reelCTA:"Link en bio",reelFormato:"Reel viral",
+ytTema:"Sube: 'Si eres ambicioso pero procrastinas' (editado por David). Link al grupo.",
+stories:[
+{n:5,tipo:"Educación técnica (S5/14)",copy:"Un tip concreto de Brand Architect en formato mini-lección — demuestras que sabes hacer el trabajo",img:"Captura del proceso o texto técnico",cta:"SIN CTA"},
+{n:6,tipo:"Educación técnica 2 (S6/14)",copy:"Otro tip concreto — no vendes, demuestras conocimiento técnico real",img:"BTS o captura de sistema",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO — Stories 5-6/14. Educación en pedacitos.",
+graba:"—",
+marce:"Rotación ads 11-20 al aire. Budget escalado al ⭐. TOQUE 3 si no salió ayer.",
+joc:"Avance módulos 3 y 4.",
+ba:"Módulo 3 (CHECO) + Módulo 4 (JOC) — continuar. Deadline Jun 22.",
+checks:["Reel + repost","Video YT 'Procrastinas' arriba","Mensaje Día 10 al canal WPP","Stories posicionamiento 5-6","Ads sem 2 rotando ✅","TOQUE 3 enviado","Stats: ventas del día"]},
+
+{num:11,d:"2026-06-23",fase:"F2a",pill:"purple",titulo:"DÍA 11 — EL HIERRO Y EL PRIMER DÓLAR + CIERRE OP. CAJA",
+obj:"Atacar la falta de constancia. La disciplina empieza en el cuerpo y se traslada al negocio. Las 64 dominadas. El primer cliente de $250. TOQUE 4: cierre de ciclo — desde mañana CERO DMs de oferta hasta la MC.",
+dolor:"Quieres construir un imperio pero no puedes dominar tus propios impulsos ni cumplir una promesa de tres días.",
+deseo:"La constancia como estructura. Físico primero, bolsillo después.",
+wpp:`"La humillación que les conté ayer me enseñó algo vital: mi identidad estaba podrida. Quería cambiar mi vida, sí. Compraba cursos de negocios y, exactamente como hace la mayoría de ustedes, los abandonaba a los tres días prometiéndome que 'mañana iba a ser diferente'. Mi palabra no valía un centavo. Entendí que la única forma de arreglar mi cerebro y dejar de abandonar era a través del dolor físico. Dejé de ir al gimnasio por vanidad para 'verme bonito' y me puse un reto de rendimiento brutal. No paré hasta lograr hacer 64 dominadas seguidas. ¿Por qué les cuento esto? Porque cuando tu cuerpo obedece a tu mente, tu vida entera cambia. La constancia no es motivación, es estructura. Esa misma disciplina física de hierro la trasladé a mi computadora. Y gracias a eso, en enero de 2026, cerré a mi primer cliente por 250 dólares. No me importó el monto. Me importó que era la evidencia absoluta de que había dejado de ser un maldito 'morro con potencial' para convertirme en un operador real dentro del juego. Si no puedes dominar tus impulsos de scrollear, jamás vas a dominar un negocio. Físico primero, bolsillo después."`,
+wppVibe:"Foto en el gimnasio (físico trabajado) o colgado haciendo dominadas + texto largo e imponente en el grupo.",
+reel:"Reel Conexión — identidad fracturada/constancia como estructura.",
+reelDolor:"El ciclo de empezar y abandonar",reelAngulo:"'La constancia no es motivación, es estructura'",
+reelPilar:"🩹 Conexión",reelCTA:"Link en bio",reelFormato:"Reel Conexión",
+ytTema:"—",
+stories:[
+{n:7,tipo:"Educación técnica 3 (S7/14)",copy:"Otro tip de operación de marcas — muestras que sabes hacer el trabajo con evidencia",img:"Captura o BTS",cta:"SIN CTA"},
+{n:8,tipo:"Prueba social (S8/14)",copy:"Captura de gente entrando al grupo o mensaje positivo del canal",img:"Captura real del grupo WPP",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO — Stories 7-8/14. Educación técnica + primera prueba social.",
+graba:"—",
+marce:"TOQUE 4 (cierre de ciclo). Tabla FINAL de Operación Caja: cierres totales, cash generado → Stats. 🔕 DESDE MAÑANA: CERO DMs de oferta hasta la MC.",
+joc:"—",
+ba:"Módulo 3 (CHECO) + Módulo 4 (JOC) — DEADLINE HOY Jun 22 (ayer).",
+checks:["Reel + repost","Mensaje El Hierro y el Primer Dólar al canal WPP","Stories posicionamiento 7-8","TOQUE 4 enviado — Operación Caja CERRADA ✅","Cash total de la Operación en Stats","Nota a Marce: desde mañana silencio de oferta hasta la MC"]},
+
+{num:12,d:"2026-06-24",fase:"F2a",pill:"purple",titulo:"DÍA 12 — LA BRÚJULA DEFINITIVA + PREVENCIÓN TEENSCLUB",
+obj:"La fe como brújula máxima. Transición perfecta hacia la Parte 2 donde la cámara gira hacia ELLOS. SIMULTÁNEAMENTE: pre-grabar el mensaje del 26 porque TeensClub se come el viernes.",
+dolor:"Cuando empiezas a facturar el ego intenta volver. El verdadero peligro del éxito material.",
+deseo:"Tener paz mental. Operar desde la fe y el propósito, no desde el ego.",
+wpp:`"Cuando empiezas a facturar dólares y la gente te empieza a respetar, el ego intenta volver a entrar por la ventana. Te crees invencible. ¿Saben qué es lo único que me mantiene en el piso con los pies en la tierra? Mi fe. Entendí que mi ambición no es mía, es un regalo de Dios. Yo puse mi fe muy por encima de mi negocio. Escuchen esto bien: si Dios me pide que cierre mi agencia mañana mismo y pierda todo, lo hago sin dudarlo. ¿Por qué? Porque mi paz ya no depende de cuántos dólares hay en mi cuenta o de un resultado efímero; depende exclusivamente de mi conexión con Él. Hoy mi vida ya no es caos ni ansiedad. Mi familia me mira con un respeto profundo. Ya no soy el actorcito famoso que se gastaba todo, ni el payaso del salón; soy el creador que opera marcas y que fundó Project Boy Academy justamente para despertar a los adolescentes que están igual de perdidos que yo lo estuve. Se acabó mi historia. Ya les mostré mis cicatrices y la sangre que dejé en el camino. A partir de mañana, les voy a arrancar la venda de los ojos. Voy a exponer uno por uno los errores estúpidos que están cometiendo. Descansen, porque mañana va a doler."`,
+wppVibe:"Video frontal, muy sereno. Hablando bajo, transmitiendo paz absoluta e imponente.",
+reel:"Reel Autoridad — 'La identidad reconstruida'",
+reelDolor:"El ego que vuelve con el éxito",reelAngulo:"Autoridad #11 — identidad reconstruida",
+reelPilar:"🩹 Autoridad",reelCTA:"Link en bio",reelFormato:"Reel de Autoridad sobrio",
+ytTema:"—",
+stories:[
+{n:9,tipo:"Prueba social 2 (S9/14)",copy:"Otro mensaje positivo del grupo o resultado de alumno",img:"Captura real",cta:"SIN CTA"},
+{n:10,tipo:"Educación técnica 4 (S10/14)",copy:"Tip técnico de prospección o edición — el que más value dé de todo el lanzamiento",img:"BTS o captura del sistema",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO — Stories 9-10/14. Prueba social + educación técnica de valor.",
+graba:"Mensaje WPP del 26 (pre-grabado y agendado) + Reel del 26 si se puede.",
+marce:"Solo monitoreo de ads. Sin ofertas.",
+joc:"Módulos 5 y 6 arrancan HOY. Deadline Jun 24.",
+ba:"Módulo 5 (CHECO) + Módulo 6 (JOC) — ARRANCAN HOY. Deadline Jun 24.",
+checks:["Reel + repost","Mensaje La Brújula Definitiva al canal WPP","Stories posicionamiento 9-10","Mensaje WPP del 26 PRE-GRABADO Y AGENDADO ✅","Contenido del 26 agendado en programador","Módulos 5 y 6 arrancados"]},
+
+{num:13,d:"2026-06-25",fase:"F2a",pill:"amber",titulo:"DÍA 13 — LA IDENTIDAD FRACTURADA + ⚠️ DEADLINE MÓDULOS JOC",
+obj:"La cámara gira: ya no habla de él, habla de ELLOS. Atacar el Dolor 1: no ser constante. Destruir el bucle tóxico. SIMULTÁNEAMENTE: TODOS los módulos deben estar arriba HOY — sin módulos completos no hay promesa que cumplir en la MC.",
+dolor:"El patrón asqueroso: lunes motivado → martes ejecutas → miércoles pereza → viernes abandonaste. La culpa brutal de la noche del viernes.",
+deseo:"Irse a dormir orgulloso. Tener la paz mental de haber cumplido la palabra.",
+wpp:`"Ayer cerré el capítulo de mi historia. Ya saben de dónde vengo y cómo escapé. Hoy la cámara gira y los apunta directamente a ustedes. Vamos a hablar de la enfermedad que tiene al 90% de este grupo estancado y con la cuenta bancaria en cero. Tienen un patrón asqueroso y todos ustedes lo conocen a la perfección: llega un lunes, ven un video de emprendimiento que los motiva, la sangre les hierve y dicen 'ahora sí, esta vez es diferente, voy a cambiar mi vida'. Arman un plan enorme en su cabeza. El martes ejecutan. El miércoles ya les da un poco de pereza. Y para el viernes... ya dejaron todo tirado y volvieron a la misma rutina de scrollear basura y jugar videojuegos. Y yo sé exactamente lo que pasa esa noche de viernes. Te vas a dormir, apagas la luz, y te ataca una culpa brutal. Te odias a ti mismo por volver a fallar, por volver a ser el mismo inútil de siempre. Y el lunes siguiente, el ciclo se repite. Muchos me mandan mensajes llorando: 'Checo, es que me emociono rápido pero me apago, siento que no tengo disciplina'. Escúchame bien y grábate esto: tu problema no es la falta de ganas ni la falta de disciplina. Tu problema es que tu identidad está fracturada desde la raíz. Te has mentido y te has traicionado tantas veces, que tu propio cerebro ya no confía en ti. Si tú tuvieras un amigo que te miente todas las semanas, lo mandarías al diablo. Pero tú te mientes a ti mismo todos los días. Si tu propia palabra no vale nada para ti... ¿Por qué demonios un empresario te tomaría en serio y te pagaría cientos de dólares? Tienen que entender algo: lo que realmente quieren en el fondo es irse a dormir sintiéndose orgullosos de ustedes mismos. Quieren la paz mental de saber que cumplieron su palabra. Mañana voy a destruir la ilusión en la que viven atrapados creyendo que están avanzando cuando en realidad están retrocediendo."`,
+wppVibe:"Audio directo (Voice Note) o video frontal en silencio absoluto. Tono confrontativo pero de decepción.",
+reel:"Reel viral — '5 negocios top para jóvenes de 14-21'",
+reelDolor:"—",reelAngulo:"'Best business para jóvenes de 14-21' — viral libre",
+reelPilar:"🔥 Viral",reelCTA:"Link en bio",reelFormato:"Reel viral",
+ytTema:"—",
+stories:[
+{n:11,tipo:"Educación técnica 5 (S11/14)",copy:"Un tip del sistema de trabajo (Notion, calendario de contenido, etc.)",img:"Captura del sistema",cta:"SIN CTA"},
+{n:12,tipo:"Educación técnica 6 (S12/14)",copy:"Otro tip técnico — demuestras sistemas concretos, no palabras",img:"BTS o captura",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO — Stories 11-12/14. Educación técnica — sistemas de trabajo.",
+graba:"—",
+marce:"—",
+joc:"🚨 SUBIR TODOS LOS MÓDULOS HOY. Brand Architect completo (1-6 como mínimo, 7 mañana máximo).",
+ba:"⚠️ DEADLINE HOY Jun 25: Módulos 1-6 ARRIBA. Módulo 7 mañana máximo. Checo audita entrando como alumno nuevo.",
+checks:["Reel viral + repost","Mensaje Identidad Fracturada al canal WPP","Stories 11-12 subidas","Módulos 1-6 TODOS ARRIBA ✅","Checo audita la Academy como alumno nuevo","Joc confirma: todo está"]},
+
+{num:14,d:"2026-06-26",fase:"F2a",pill:"amber",titulo:"DÍA 14 — LA ILUSIÓN DEL MOVIMIENTO + 🎉 TEENSCLUB VOL.1",
+obj:"Destruir la creencia de que consumir contenido es trabajar. La dopamina barata de los guardados. SIMULTÁNEAMENTE: TeensClub Vol.1 — el lanzamiento corre SOLO con lo pre-grabado del día 12.",
+dolor:"Parálisis por análisis. El miedo a equivocarse. Consumir como sustituto de ejecutar.",
+deseo:"Un plan real, simple, estructurado y sostenible. Un mapa que no confunda.",
+wpp:`[PRE-GRABADO Y AGENDADO DESDE EL DÍA 12]
+"Abran las carpetas de guardados en su TikTok o Instagram ahora mismo. Tienen cientos, quizás miles de videos de gurús en Ferraris alquilados vendiéndoles la película. Uno les dice que hagan dropshipping, el otro que el trading con 10 dólares es la salvación, el otro que abran una agencia de inteligencia artificial. Viven saturados, confundidos y ahogados en información. Y como tienen un terror profundo a dar el primer paso, equivocarse y verse como unos estúpidos fracasando, se escudan en la excusa más cobarde de todas: 'Checo, es que no sé qué emprender, todavía estoy investigando cuál es el modelo perfecto'. Mentira. No estás investigando nada. Estás paralizado por el miedo de decepcionarte a ti mismo otra vez. Consumir contenido de emprendimiento desde la cama de tu cuarto no es trabajar. Es dopamina barata. Estás anestesiado. Lo que ustedes están rogando en silencio es un maldito plan real, simple, estructurado y sostenible. Un joven de 16 a 20 años no necesita inventar la próxima empresa de Silicon Valley. Solo necesita aprender UNA sola habilidad técnica que el mercado necesite con urgencia hoy mismo. Por eso, en unos días voy a subir un video revelando la habilidad de 'Retención Visual'. El que persigue 10 modelos de negocio a la vez termina quebrado. Enfóquense."`,
+wppVibe:"Video grabando la pantalla del celular haciendo scroll — PRE-GRABADO y agendado desde el día 12.",
+reel:"Tablero + Conexión #19 — pre-agendado desde el 24.",
+reelDolor:"Ilusión de movimiento / parálisis",reelAngulo:"Conexión #19 — pre-agendado",
+reelPilar:"🩹 Conexión",reelCTA:"Link en bio",reelFormato:"Pre-agendado desde el 24",
+ytTema:"Sube: 'Cómo TENER 10x más dinero siendo JOVEN' (editado por David). Link al grupo.",
+stories:[
+{n:1,tipo:"BTS del TeensClub",copy:"Behind the scenes del evento — demuestras que también builds eventos, no solo contenido",img:"Foto/video del evento TeensClub",cta:"SIN CTA — cuenta como posicionamiento pasivo"}
+],
+storiesObj:"BTS de TeensClub. Material para prueba social posterior. SIN CTA.",
+graba:"Material del TeensClub (clips para stories posteriores).",
+marce:"Solo monitoreo.",
+joc:"—",
+ba:"Módulo 7 (CHECO+JOC) — deadline Jun 25 (ayer). ¿Terminado?",
+checks:["Verificar que el mensaje pre-grabado salió ✅","Reel agendado salió ✅","Video YT arriba","Stories BTS del evento","🎉 ROMPERLA EN TEENSCLUB","Módulo 7 confirmado ✅"]},
+
+{num:15,d:"2026-06-27",fase:"F2a",pill:"purple",titulo:"DÍA 15 — LA COMPARACIÓN, EL AURA Y EL RESPETO",
+obj:"Atacar el dolor de compararse con otros, sentirse invisible y la presión de los papás. Destruir la objeción de 'cómo le explico esto a mis papás'. Resaca de evento — día ligero. Tarde: empieza el outline de slides de la MC.",
+dolor:"Sentirse invisible. La comparación con pibes de la misma edad que ya avanzan. La presión de los papás.",
+deseo:"Sentirse magnético. Que la familia te mire con respeto. Ganar 'aura' a través de resultados.",
+wpp:`"Abren Instagram un martes por la tarde. Ven a pibes de su misma edad que ya están facturando, que tienen un físico increíble, que viajan o que tienen novia. Inmediatamente sienten una cachetada en el ego. Sienten que la vida se les escapa y que van años atrasados. Y lo peor no es eso: lo peor es esa sensación de sentirse invisibles. Entran a una fiesta o a una reunión y nadie los nota, sienten que les falta presencia, que les falta 'aura'. Y para colmo de males, llegan a su casa y tienen a sus papás encima presionándolos, exigiéndoles buenas calificaciones o diciéndoles que dejen de perder el tiempo en la computadora. Por eso mi DM está lleno de pibes asustados diciéndome: 'Checo, ¿cómo le explico a mis papás que quiero emprender para que me dejen hacerlo?'. Escúchenme bien: a los papás no se les explica absolutamente nada. A los papás se les demuestra. Y tu 'aura' y tu magnetismo no se fingen copiando la ropa de un influencer o buscando un 'glow up express' vacío que se te cae a los tres días. El magnetismo real, esa presencia que hace que la gente te respete cuando entras a un cuarto, viene de la seguridad de saber que estás construyendo algo cabrón en silencio. El respeto no se llora, se impone con resultados. En unos días, les voy a regalar mi guion confidencial para mandarle el primer mensaje a un empresario por DM para que me respete desde la primera palabra."`,
+wppVibe:"Video en el auto, en el gimnasio o entorno de alto valor que proyecte estatus real.",
+reel:"Reel Autoridad — el magnetismo viene de resultados.",
+reelDolor:"Sentirse invisible, sin presencia",reelAngulo:"Autoridad #14 — el magnetismo no se finge",
+reelPilar:"🩹 Autoridad",reelCTA:"Link en bio",reelFormato:"Reel de Autoridad",
+ytTema:"—",
+stories:[
+{n:13,tipo:"Conexión humana (S13/14)",copy:"Algo personal sin relación directa con el negocio — humaniza tu perfil",img:"Foto personal auténtica",cta:"SIN CTA"}
+],
+storiesObj:"🟫 POSICIONAMIENTO — Story 13/14. Conexión humana — sin producto, sin CTA.",
+graba:"—",
+marce:"—",
+joc:"Waitlist form listo y probado para el lunes 29.",
+ba:"TODOS LOS MÓDULOS DEBEN ESTAR LISTOS. Auditoría final esta semana.",
+checks:["Reel + repost","Mensaje Comparación/Aura al canal WPP","Story 13 subida","Outline de slides de la MC empezado","Waitlist form probado (Joc)","Auditoría final de módulos"]},
+
+{num:16,d:"2026-06-28",fase:"F2a",pill:"purple",titulo:"DÍA 16 — LA MENTIRA DEL 'NO TENGO TIEMPO' + PUENTE AL VEHÍCULO",
+obj:"Destruir la excusa más común con el Screen Time de 4.5 horas. Plantar el deseo y anunciar que MAÑANA pasa algo grande. Pivote de toda la Fase 2: de dar valor → abrir la puerta. Review semanal de stories.",
+dolor:"El caos mental. Sentir que desperdicia su adolescencia. Decir 'no tengo tiempo' cuando pasa 4 horas en TikTok.",
+deseo:"Ganar su propio dinero. No pedir permisos. Tener el control de su vida.",
+wpp:`"Llegó el momento de que nos miremos al espejo. Tengo miles de mensajes de excusas diciendo: 'Hermano, yo quiero romperla, tengo mucha ambición, pero la escuela me ahoga, no tengo tiempo, y además no tengo dinero para empezar un negocio'. Vamos a dejarnos de hipocresías baratas. Llegas de la escuela o universidad a las 3 de la tarde, estás cansado. Te tiras en la cama y te dices la mentira más vieja del mundo: 'voy a ver el celular 10 minutos solo para desconectar'. Abres TikTok, empiezas a deslizar el dedo, y cuando te das cuenta el sol ya se ocultó. Pasaron 3 o 4 horas. Y después te preguntas por qué tu vida es una miseria. Decir 'no tengo tiempo' cuando pasas 4 horas al día consumiendo basura en internet, es la excusa de un cobarde y un conformista. El tiempo te sobra, lo que no tienes es un maldito orden. Y decir 'no tengo dinero' es igual de falso, porque el vehículo que operamos nosotros requiere cero dólares de capital inicial. Tu problema es el caos mental. Yo sé perfectamente que su mayor deseo hoy es ganar su propia plata, aunque sean 200 dólares al mes, porque están asqueados de tener que pedirle permiso y dinero a sus papás hasta para salir a comer con sus amigos. Quieren libertad. Pero para tener libertad, hay que tener un sistema. Aprender a editar o tener una habilidad técnica no sirve de absolutamente nada si no saben venderla y entregarla. Si salen allá afuera sin saber cobrar, van a hacer el ridículo. Por eso, esta misma semana les voy a explicar por qué necesitan un 'Ecosistema de 90 Días' conectado para que el cliente les pague. Mañana pongo el filtro definitivo. Prepárense."`,
+wppVibe:"Video crudo. De fondo, captura de Screen Time del iPhone mostrando 4.5 horas en TikTok.",
+reel:"Reel viral libre — 'Vendedores en el 2050'",
+reelDolor:"—",reelAngulo:"'Vendedores en el 2050' — viral libre predictivo",
+reelPilar:"🔥 Viral",reelCTA:"Link en bio",reelFormato:"Reel viral",
+ytTema:"Sube: '10X más PRODUCTIVO siendo estudiante y emprendedor' (David). Link al grupo.",
+stories:[
+{n:14,tipo:"Conexión humana final (S14/14 — COMPLETA ✅)",copy:"Algo personal y auténtico — cierra la secuencia humanizando antes del gran anuncio",img:"Foto personal",cta:"SIN CTA — secuencia POSICIONAMIENTO TERMINADA ✅"},
+{n:"T1",tipo:"Teaser del anuncio de mañana",copy:"'Mañana anuncio algo que llevo meses construyendo'",img:"Texto impactante sobre fondo oscuro",cta:"SIN CTA"},
+{n:"P1",tipo:"Caja de preguntas",copy:"'¿Cuál es tu mayor obstáculo para generar ingresos?' — es el día del vehículo",img:"Caja de preguntas sticker",cta:"Sticker de respuesta"}
+],
+storiesObj:"🟫 Story 14/14 — SECUENCIA POSICIONAMIENTO COMPLETA ✅ + Teaser del anuncio de mañana + Caja de preguntas.",
+graba:"—",
+marce:"Preparar flujo de DMs para la Waitlist de mañana. Mensaje de confirmación listo.",
+joc:"Waitlist form FINAL. Flujo técnico: form → link al grupo → recordatorio automático para el 4 jul.",
+ba:"TODOS LOS MÓDULOS DEBEN ESTAR TERMINADOS.",
+checks:["Reel viral + repost","Video YT arriba","Mensaje 'No Tengo Tiempo' al canal WPP","Stories: 14/14 posicionamiento + teaser + caja de preguntas","Review semanal de stories en Stats","Flujo de Waitlist probado y listo ✅"]},
+
+{num:17,d:"2026-06-29",fase:"F2b",pill:"red",titulo:"DÍA 17 — EL DESEO OCULTO + 🔑 EL ANUNCIO + WAITLIST ABRE",
+obj:"El deseo más profundo del avatar: sentirse suficiente. Transición de CTA: ya no es 'curso gratis', es 'Waitlist'. El anuncio se hace en el GRUPO primero (VIP). SIMULTÁNEAMENTE: DM personal a cada inscrito de la Waitlist.",
+dolor:"Tener un potencial inmenso pero no verlo reflejado en la vida real.",
+deseo:"Sentirse suficiente. Dejar de ser una promesa vacía para volverse evidencia.",
+wpp:`"Llegamos al punto de inflexión. Durante los últimos días les quité todas las vendas de los ojos. Les demostré que si hoy no tienen un peso en el bolsillo, si no tienen constancia y si no tienen el respeto de su familia, es 100% culpa de ustedes. No de la economía, no de la escuela. Suya. Muchos se quedan paralizados y no actúan porque su cerebro de víctima les dice: '¿Y si todo esto es humo? ¿Y si me estafan?'. Les voy a dejar algo muy claro ahora mismo: en mi ecosistema no hay píldoras mágicas. No hay 'hazte rico apretando un botón'. Lo que yo hago es aprender una habilidad dura, sentar el culo en la silla, estructurar mi día y ejecutar de forma enferma. Hay 'Espectadores' que prefieren seguir quejándose de su suerte y buscando excusas. Y hay 'Constructores'. Yo sé lo que hay en lo más profundo de sus cabezas. Ustedes saben, muy en el fondo, que nacieron para algo mucho más grande que la vida promedio. Tienen ese fuego, tienen el potencial, pero necesitan desesperadamente sentirse suficientes y dejar de ser una promesa vacía. Quieren volverse evidencia. A partir de mañana, arranco la fase técnica pura y dura. Les voy a presentar el 'Brand Architect', el único vehículo realista para que un joven adolescente opere marcas millonarias y facture dólares en absoluto silencio. Pero presten mucha atención: el sistema completo para operar este vehículo solo se lo voy a dar a los que realmente tengan hambre. Mañana mismo voy a abrir una WAITLIST oficial y secreta. Solo los que llenen ese formulario tendrán la contraseña para entrar a mi Clase Final. El tren arranca mañana. Estén con el celular en la mano."`,
+wppVibe:"Video muy serio, postura hiperdominante en el setup de trabajo. Silencio absoluto de fondo, máxima tensión.",
+reel:"Reel Autoridad #1 + anuncio en el caption.",
+reelDolor:"Potencial que no se refleja en resultados",reelAngulo:"Autoridad #1 — el Brand Architect",
+reelPilar:"🩹 Autoridad",reelCTA:"Waitlist en el link de bio",reelFormato:"Reel + anuncio en caption",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Hook del anuncio (Tráfico S1/6)",copy:"'Llevo meses construyendo algo. Hoy lo anuncio.'",img:"Selfie serio o texto impactante",cta:"SIN CTA"},
+{n:2,tipo:"Qué es PBA (S2/6)",copy:"Qué incluye Project Boy Academy y a quién es para",img:"Captura de la plataforma o texto",cta:"SIN CTA"}
+],
+storiesObj:"🟪 TRÁFICO nueva secuencia (6 stories) — Stories 1-2 hacia la Waitlist.",
+graba:"—",
+marce:"Responder TODO DM y comentario del anuncio hoy. Registrar inscritos a Waitlist.",
+joc:"Monitorear el form en vivo. Si hay bugs: resolver inmediatamente.",
+ba:"TODOS LOS MÓDULOS TERMINADOS ✅ — verificar antes del anuncio.",
+checks:["ANUNCIO en el grupo WPP PRIMERO ✅ (antes que en orgánico)","Reel con anuncio + repost TikTok","Stories 1-2 Tráfico → Waitlist","DMs y comentarios respondidos","# inscritos del día en Stats"]},
+
+{num:18,d:"2026-06-30",fase:"F2b",pill:"blue",titulo:"DÍA 18 — HACKEANDO LA ATENCIÓN (Video Largo 1) + DMs a Waitlist",
+obj:"Demostrar autoridad técnica real con los 4 pasos de un video viral — profundizar SOLO en el Gancho. Techo de cristal: para el sistema completo hay que ir a la MC. DM personal a cada inscrito de la Waitlist.",
+dolor:"Quieren un plan claro sin confusión. Quieren dejar de ser invisibles.",
+deseo:"Entender por qué les pagarían siendo jóvenes. Ver la lógica del sistema.",
+wpp:`INTRO AL GRUPO: "Los que ya están en la Waitlist, presten atención. Hoy les voy a enseñar por qué los empresarios millonarios nos pagan a nosotros, pibes de 16 a 20 años, y no a una agencia tradicional. Muchos de ustedes se paralizan pensando: '¿Pero por qué me pagarían a mí si no soy experto en marketing?'. Escúchenme: el mercado no paga por tu edad, ni por 'videos con subtítulos bonitos'. El mercado hoy paga por Atención Retenida. Si ustedes le retienen la atención a la audiencia de un empresario, ese empresario hace miles de dólares. Y si él hace miles de dólares gracias a ti, te paga tu mensualidad riéndose. Vayan a ver el video largo de hoy. Les enseño cómo hackear la dopamina de la gente en 3 segundos."
+
+DM PRIVADO A CADA INSCRITO DE WAITLIST: "Hermano, vi tu formulario. Brutal. Me pusiste que te frena [Dolor que puso]. ¿Qué es lo que más te jode de eso? Te leo para sumarlo a la clase."`,
+wppVibe:"Texto con link al video largo + DM personalizado a cada inscrito.",
+reel:"Reel viral — 'Consejo omegle'",
+reelDolor:"—",reelAngulo:"'Consejo omegle' — viral libre",
+reelPilar:"🔥 Viral",reelCTA:"Link en bio",reelFormato:"Reel viral",
+ytTema:"⭐ Video Largo 1: 'Hackeando la Atención' (12 min). Los 4 pasos + profundiza SOLO en el Gancho Visual. Techo de cristal: el sistema completo en la MC.",
+stories:[
+{n:3,tipo:"Clip del largo (S3/6)",copy:"El momento más impactante del video de 12 min",img:"Clip de video",cta:"SIN CTA"},
+{n:4,tipo:"CTA a Waitlist (S4/6)",copy:"'Si quieres el sistema completo, apúntate a la Waitlist antes del viernes'",img:"Texto + link sticker",cta:"Link Waitlist"}
+],
+storiesObj:"🟪 TRÁFICO — Stories 3-4/6. Clips del largo + CTA a la Waitlist.",
+graba:"—",
+marce:"DM a cada inscrito de Waitlist: 'Estás dentro, la Masterclass es el sábado 4, 12 PM MX, YouTube live'.",
+joc:"—",
+ba:"—",
+checks:["Reel viral + repost","Largo 1 'Hackeando la Atención' arriba en YouTube","Mensaje al canal con link al largo","Stories 3-4 subidas","DMs a Waitlist enviados ✅"]},
+
+{num:19,d:"2026-07-01",fase:"F2b",pill:"blue",titulo:"DÍA 19 — PROSPECCIÓN SIN ROGAR (Video Largo 2)",
+obj:"Enseñar las 3 fases de prospección pero profundizar SOLO en el Mensaje de Valor (DM Innegable). Techo de cristal: cómo estructurar la llamada de cierre → en la MC. Countdown 'cierra el viernes'.",
+dolor:"Sentirse invisible. No tener dinero propio. Vender se siente como rogar.",
+deseo:"Prospectar sin sentirse mendigo. Cobrar con dignidad.",
+wpp:`INTRO AL GRUPO: "Si tú vas al DM de un empresario a decir 'Hola, ¿me das trabajo?', te van a bloquear al instante. Eso huele a desesperación y a inexperiencia. Ustedes no son pedigüeños, son Brand Architects. El empresario no quiere que le 'ayudes', quiere que le soluciones el cuello de botella que lo tiene estancado. Hoy les revelo mi guion confidencial para que un empresario te respete desde la primera palabra. Miren el video."`,
+wppVibe:"Texto con link al Largo 2 + countdown visible en el mensaje: 'la Waitlist cierra el viernes a medianoche'.",
+reel:"Reel Conexión — el avatar que no quiere sentirse mendigo.",
+reelDolor:"Miedo a vender, sentirse mendigo",reelAngulo:"'por qué vender se siente como rogar (y cómo arreglarlo)'",
+reelPilar:"🩹 Conexión",reelCTA:"Link en bio",reelFormato:"Reel Conexión",
+ytTema:"⭐ Video Largo 2: 'La Prospección sin rogar' (15 min). Las 3 fases + profundiza en el DM Innegable. Techo de cristal: llamada de cierre y cobrar → en la MC.",
+stories:[
+{n:5,tipo:"Aprendizaje + countdown (S5/6)",copy:"'Ya saben cómo pedir. Ahora aprende cómo cobrar — solo en la MC. Waitlist cierra el viernes 23:59'",img:"Countdown sticker + texto",cta:"Link Waitlist"}
+],
+storiesObj:"🟪 TRÁFICO — Story 5/6. Aprendizaje del largo + countdown 'Waitlist cierra el viernes'.",
+graba:"—",
+marce:"Seguimiento de Waitlist. ¿Va lento? Push en el grupo con # de inscritos (prueba social).",
+joc:"—",
+ba:"—",
+checks:["Reel + repost","Largo 2 'Prospección sin rogar' arriba","Mensaje al canal con link + countdown","Story 5 con countdown","# inscritos en Stats"]},
+
+{num:20,d:"2026-07-02",fase:"F2b",pill:"blue",titulo:"DÍA 20 — EL ONBOARDING + ⚡ 'ESTE VIDEO SE BORRARÁ EN 48HRS'",
+obj:"Doble golpe: Largo 3 (cura al miedo de no saber gestionar el cliente) + EL VIDEO EVENTO de YouTube que genera urgencia masiva pre-MC. Urgencia total hacia la Waitlist.",
+dolor:"Miedo a ser un fraude. Miedo a que el cliente le pida mil cosas y explote el celular.",
+deseo:"Operar con protocolos profesionales. Ser un operador, no un esclavo.",
+wpp:`INTRO AL GRUPO: "Sé que tienen miedo. ¿Qué pasa si cierras al cliente y luego no sabes qué hacer? ¿Qué pasa si te explota el celular con pedidos a las 3 AM y te vuelves un esclavo? Ese miedo viene de no tener una estructura profesional. Hoy les doy la solución: el Onboarding. No trabajamos a lo loco, trabajamos con protocolos. Mira el video, esta es la diferencia entre un esclavo y un operador."`,
+wppVibe:"Texto con dos links: el Largo 3 y el video de 48 hrs de YouTube.",
+reel:"Reel Autoridad — el onboarding profesional.",
+reelDolor:"Miedo a no saber qué hacer con el cliente",reelAngulo:"'por qué el 90% de los freelancers fracasan'",
+reelPilar:"🩹 Autoridad",reelCTA:"Link en bio",reelFormato:"Reel Autoridad",
+ytTema:"⚡ 'ESTE VIDEO SE BORRARÁ EN 48HRS' (urgencia pre-MC) + ⭐ Largo 3: 'El Onboarding' (15 min). El checklist de cliente → formulario → accesos → contrato. Techo de cristal: plantillas de contratos → regalo final de la MC.",
+stories:[
+{n:6,tipo:"CTA FUERTE + clip (S6/6 — COMPLETA ✅)",copy:"'Este video se borra en 48 horas. Y la Waitlist cierra mañana. Las dos cosas son reales.'",img:"Clip del video + countdown sticker",cta:"Link Waitlist — secuencia TRÁFICO COMPLETA ✅"}
+],
+storiesObj:"🟪 TRÁFICO — Story 6/6 CTA FUERTE. Cierra la secuencia completa.",
+graba:"—",
+marce:"Push final de Waitlist a quienes mostraron interés pero no se inscribieron.",
+joc:"Flujo del live probado: link de YouTube, recordatorios, pasarela activa.",
+ba:"—",
+checks:["Reel + repost","Video '48HRS' arriba ⚡","Largo 3 'Onboarding' arriba","Mensaje al canal con ambos links","Story 6 CTA fuerte — secuencia TRÁFICO COMPLETA ✅","Flujo del live probado ✅"]},
+
+{num:21,d:"2026-07-03",fase:"F2b",pill:"red",titulo:"DÍA 21 — EL ULTIMÁTUM: LA HORA DE LA VERDAD · Waitlist cierra 23:59",
+obj:"Cierre psicológico total. Preparación para la MC. Ultimátum real: la Waitlist se cierra HOY a medianoche. En la noche: SLIDES TERMINADAS + ensayo general de la MC.",
+dolor:"Sentir que desperdicias tu vida vs. el deseo de ser alguien que impone respeto.",
+deseo:"La paz mental de saber que tomaste la decisión correcta.",
+wpp:`ULTIMO MENSAJE ANTES DE LA MC:
+"Este es mi último mensaje. Mañana a las 12:00 PM (hora de México) sus vidas cambian o se hunden para siempre en la misma inercia. Pongan el celular en horizontal, encierrense y miren este video. Es momento de decidir quiénes son."
+
+VIDEO LARGO (12 mins):
+- El Espejo Frontal: "Hace 22 días empezamos. Te puse frente al espejo y te dolió. Viste que tu problema no es la falta de motivación, sino tu falta de estructura y tu identidad fracturada. Tienes ambición, pero dependes de tus papás hasta para salir. Entras a Instagram y ves a otros avanzando mientras tú sigues estancado, sintiéndote invisible. Eso termina hoy."
+- La Inyección de Deseo: "Tú quieres la paz mental de saber que cumpliste tu palabra. Quieres entrar a tu casa y que tu familia te mire con respeto. Quieres dejar de ser una promesa vacía para volverte evidencia."
+- El Hype Final: "Mañana a las 12:00 PM MX, el juego se acaba. Voy a revelar el Ecosistema de 90 Días. Te voy a mostrar cómo operar marcas, cómo generar dólares en silencio y cómo ganarte tu libertad. Si faltas mañana, todo esto no sirvió de nada y seguirás siendo un espectador. Hoy a la medianoche se cierra la Waitlist. Pongan sus alarmas. Nos vemos mañana."`,
+wppVibe:"Texto urgente con link al Largo 4. Stories hacen el trabajo de countdown.",
+reel:"Reel Conexión — el costo real de no decidir.",
+reelDolor:"Miedo al riesgo / parálisis final",reelAngulo:"'el costo de seguir esperando el momento perfecto'",
+reelPilar:"🩹 Conexión",reelCTA:"Waitlist en bio — ÚLTIMO DÍA",reelFormato:"Reel Conexión",
+ytTema:"⭐ Largo 4: 'El Ultimátum: La hora de la verdad' (12 min). El espejo frontal + la inyección de deseo + el hype final.",
+stories:[
+{n:1,tipo:"12 horas",copy:"'Quedan 12 horas para cerrar la Waitlist'",img:"Countdown sticker",cta:"Link Waitlist"},
+{n:2,tipo:"6 horas",copy:"'Quedan 6 horas'",img:"Countdown sticker",cta:"Link Waitlist"},
+{n:3,tipo:"2 horas",copy:"'Quedan 2 horas. No digo esto como marketing. El form se cierra.'",img:"Selfie serio + countdown",cta:"Link Waitlist"},
+{n:4,tipo:"CERRADA 23:59",copy:"'La Waitlist está cerrada. Los que están adentro, mañana 12 PM. Los demás: suerte.'",img:"Texto sobre fondo oscuro",cta:"SIN CTA — ya cerró"}
+],
+storiesObj:"Countdown total durante todo el día: 12h → 6h → 2h → CERRADA.",
+graba:"Ensayo general de la MC (corre las slides completas una vez, graba para revisar).",
+marce:"Cierre de Waitlist 23:59. Conteo final. Preparar mensajes del sábado: 8AM / 11AM / 11:45AM.",
+joc:"TODO listo para el live: link configurado, pasarela activa y probada.",
+ba:"—",
+checks:["Reel + repost","Largo 4 'El Ultimátum' arriba en YouTube","Mensaje ultimátum al canal WPP con link","Stories countdown x4 durante el día","SLIDES TERMINADAS ✅","Ensayo general hecho","Waitlist CERRADA 23:59 ✅","# total de inscritos en Stats"]},
+
+{num:22,d:"2026-07-04",fase:"MC",pill:"red",titulo:"🔴 MASTERCLASS — 12:00 PM MX · YOUTUBE EN VIVO",
+obj:"Asistencia masiva. Entrega del Ecosistema de 90 Días. Tour por la Academy. Conversión hacia PBA anual (PRIMERO) y Mentorship (solo en DM). La congruencia de 22 días converge aquí.",
+dolor:"Todos los dolores de los 22 días anteriores se integran en un solo sistema.",
+deseo:"La paz mental de saber que tomaron la decisión correcta. Dejar de ser una promesa vacía.",
+wpp:`08:00 AM: "Hoy es el día. A las 12:00 PM (hora de México) revelo el Ecosistema de 90 Días. Tienen 4 horas para acomodar sus horarios, salir del colegio o pedir permiso en el trabajo si es necesario. La sala de YouTube tiene un límite estricto. El link solo se enviará por aquí a los que están en la lista. Si llegan tarde, se quedan afuera. Acomódense."
+
+11:00 AM: "Falta una hora. Asegúrense de tener el espacio listo. Cierren la puerta de su cuarto, pongan el celular en modo avión y avísenle a su familia que hasta la 1:30 PM no existen para nadie. Hoy dejamos de ser una promesa vacía para volvernos evidencia. Preparen papel y bolígrafo. Activen las alarmas, en 60 minutos mando el link de acceso."
+
+11:45 AM: "ESTAMOS EN VIVO. 🔴 La sala está abierta. Entra ahora o quédate toda tu juventud mirando cómo los demás construyen el futuro que tú querías para ti. Toca el link y entra ya: [LINK DE YOUTUBE]"
+
+POST-CLASE: "Quería pasar a agradecerles a todos por haberse conectado hoy al mediodía. Sé que muchos hicieron el esfuerzo de salir del colegio, pedir permiso o acomodar sus horarios para estar presentes, y eso habla de su hambre. Independientemente de si entraron a la academia o no, espero que se lleven algo claro: el Ecosistema de 90 días no es una teoría, es un vehículo real para los que están dispuestos a trabajar en silencio. Gracias por la confianza y por el respeto que le dieron al espacio. Los Constructores que dieron el paso, nos vemos en la academia. A los que no, sigan trabajando en su disciplina. Un saludo."`,
+wppVibe:"4 mensajes: 8AM / 11AM / 11:45AM (link) / post-clase (gratitud). Urgencia real escalada.",
+reel:"— (No hay Reel hoy — todo a la MC)",
+reelDolor:"—",reelAngulo:"—",reelPilar:"—",reelCTA:"—",reelFormato:"—",
+ytTema:"🔴 EL LIVE A LAS 12 PM MX. Estructura: Ecosistema de 90 Días → Tour de la Academy → OFERTA ANUAL PRIMERO (50% off + módulos día 1 + bonus) → mensual plan B → Mentorship: 'si quieres ir más rápido, aplica por DM'.",
+stories:[
+{n:1,tipo:"Mañana — '4 horas'",copy:"Anticipación con energía — 'en 4 horas'",img:"Selfie preparándose",cta:"Link recordatorio"},
+{n:2,tipo:"Modo avión",copy:"'Modo avión. Papel y bolígrafo. Nos vemos en 60 minutos.'",img:"Selfie serio",cta:"SIN CTA"},
+{n:3,tipo:"LINK DEL LIVE 🔴",copy:"ESTAMOS EN VIVO",img:"Screenshot del live corriendo",cta:"Link del live URGENTE"},
+{n:4,tipo:"En vivo — momentos clave",copy:"Screenshots del live, gente conectada, el momento más poderoso",img:"Capturas del live en tiempo real",cta:"Link del live"},
+{n:5,tipo:"Post — primeras entradas",copy:"Primeras capturas de gente que compró / entró a la Academy",img:"Bienvenidas en Skool",cta:"Link de pago"}
+],
+storiesObj:"🟦 VENTAS en tiempo real todo el día. Anticipación → live → screenshots → primeras entradas.",
+graba:"—",
+marce:"Setting en vivo: responder DMs del live, mandar links de pago, registrar CADA venta en Stats en tiempo real.",
+joc:"Soporte técnico del live + monitorear pasarela de pago.",
+ba:"—",
+checks:["8AM mensaje ✅","11AM ultimátum de preparación ✅","11:45AM link del live ✅","🔴 MC DADA ✅","Mensaje de gratitud post-clase","Stories del día completas","Ventas del día en Stats (+/−)"]},
+
+{num:23,d:"2026-07-05",fase:"F3",pill:"blue",titulo:"DÍA 23 — EMBUDO 2 PASOS (INBOUND + QUEMAR WAITLIST)",
+obj:"AM: avisar a los que no asistieron y obligarlos a pasar por DM. PM: quemar la Waitlist proactivamente — DM a quienes se registraron pero no compraron. Las stories entran en modo VENTAS (3) y así se quedan hasta el 12.",
+dolor:"No haber podido ir a la MC. FOMO de lo que se perdieron.",
+deseo:"Entrar antes de que sea tarde.",
+wpp:`PASO 1 (Mañana/Mediodía — INBOUND): "Buen día a todos. Ayer tuvimos una clase brutal y muchos me escribieron que se quedaron afuera por el colegio o el horario. Si te perdiste el sistema para facturar tus primeros $1,000 USD/mes como Operador y realmente la quieres ver, mándame un mensaje al privado AHORA MISMO y te paso el acceso. Los leo."
+
+PASO 2 (Tarde — QUEMAR WAITLIST por DM): "Qué onda hermano. Vi que llenaste la Waitlist oficial pero no te vi entrar a la Academia anoche. Sabiendo que estás estancado por [Dolor que puso en el formulario], ¿qué te pareció la clase? ¿Pudiste verla o te la perdiste?"`,
+wppVibe:"Texto casual pero con urgencia. El DM a la Waitlist personalizado con su dolor del formulario.",
+reel:"Clip del mejor momento de la MC.",
+reelDolor:"FOMO de lo que se perdieron",reelAngulo:"Clip del momento más potente de la MC",
+reelPilar:"🩹 Autoridad",reelCTA:"Link de pago en bio",reelFormato:"Clip del live",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Ventas D1 S1/3",copy:"Hook del live ('Ayer en la clase pasó algo que no esperaba…') + sticker",img:"Selfie o clip de la MC",cta:"Sticker de pregunta"},
+{n:2,tipo:"Ventas D1 S2/3",copy:"Capturas de los primeros alumnos que entraron",img:"Capturas de Skool",cta:"SIN CTA"},
+{n:3,tipo:"Ventas D1 S3/3 — CTA",copy:"'Las puertas están abiertas. Anual $169 o mensual $37. Comenta ENTRAR'",img:"Texto con precios + urgencia",cta:"Comenta ENTRAR → link de pago"}
+],
+storiesObj:"🟦 VENTAS D1 (3 stories). Hook → prueba → CTA 'Comenta ENTRAR'.",
+graba:"—",
+marce:"AM: inbound. PM: quemar Waitlist 1x1. Llamadas a quienes pidan hablar.",
+joc:"—",ba:"—",
+checks:["Clip de la MC publicado + repost","Mensaje inbound en el grupo (AM)","DMs a Waitlist 1x1 (PM)","Stories de ventas (3) subidas","Llamadas del día","Ventas en Stats"]},
+
+{num:24,d:"2026-07-06",fase:"F3",pill:"blue",titulo:"DÍA 24 — MARCO 1: CASO 'MATEO' (DINERO)",
+obj:"Destruir la objeción del dinero con el caso real de Mateo que vendió sus juegos de Play para pagar el acceso. Anunciar el cierre en piedra: domingo 12, 23:59.",
+dolor:"No tener dinero para entrar — la excusa del dinero como falta de carácter.",
+deseo:"Encontrar la manera donde no había camino.",
+wpp:`"Ayer vieron la clase. Ahí anuncié la apertura oficial de Project Boy Academy — el único ecosistema donde aprendes a operar marcas personales para llevarte tus primeros $1,000 USD/mes, sin depender de tus papás. Atención: Cerramos las puertas definitivamente este domingo a las 23:59. Para los que siguen poniendo excusas, miren esta captura. Él es Mateo. Ayer me escribió por DM diciendo que no tenía la plata y que no quería pedirle a sus viejos. ¿Saben qué hizo hoy? En lugar de decir 'bueno, será la próxima', agarró unos juegos de Play que ya no usaba, los vendió esta mañana en Marketplace y pagó su acceso. Él ya está adentro dominando el módulo de Project Boy Academy. Esa es la identidad de un verdadero constructor. Si tu excusa hoy es 'no tengo plata', pero tienes un iPhone en la mano y sales todos los fines de semana, asume que tus prioridades son una basura. El domingo a la medianoche cerramos. Si quieres tu lugar o tienes dudas, háblame al privado."`,
+wppVibe:"Captura de pantalla de bienvenida de Mateo en Skool + texto contundente. Video o texto.",
+reel:"Clip del Largo 1 — retención visual.",
+reelDolor:"—",reelAngulo:"Clip Largo 1 + caption de venta",reelPilar:"🩹 Autoridad",
+reelCTA:"Link de pago en bio",reelFormato:"Clip del largo",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Ventas D2 S1/3",copy:"Captura de Mateo entrando + contexto de su historia de vender los juegos",img:"Captura de Skool",cta:"SIN CTA"},
+{n:2,tipo:"Ventas D2 S2/3",copy:"El mensaje clave del día — destroza la objeción del dinero",img:"Texto",cta:"SIN CTA"},
+{n:3,tipo:"Ventas D2 S3/3 — CTA",copy:"'Domingo 23:59 se apaga el link. Comenta ENTRAR'",img:"Urgencia",cta:"Comenta ENTRAR"}
+],
+storiesObj:"🟦 VENTAS D2 (3 stories). Marco Mateo + CTA con fecha límite.",
+graba:"—",marce:"Llamadas + seguimiento.",joc:"—",ba:"—",
+checks:["Clip Largo 1 + repost","Mensaje Marco Mateo al canal WPP","Stories ventas D2","Llamadas del día","Ventas en Stats"]},
+
+{num:25,d:"2026-07-07",fase:"F3",pill:"blue",titulo:"DÍA 25 — MARCO 2: CASO 'LUCAS' (MIEDO AL ABANDONO)",
+obj:"Atacar el Dolor 1: 'empiezo y abandono'. Mostrar que la estructura anti-procrastinación de la Academia sostiene aunque la motivación se caiga.",
+dolor:"Terror de emocionarse hoy y abandonar a los 3 días como siempre.",
+deseo:"Un sistema que funcione sin depender de la motivación.",
+wpp:`"Acaba de entrar Lucas a Project Boy Academy. Les cuento esto porque Lucas entró con la objeción más común de todas: 'Hermano, tengo terror de emocionarme hoy y abandonar a los 3 días como siempre me pasa'. ¿Saben qué hizo? Entró igual. Porque entendió que nuestra academia no depende de su motivación adolescente, depende de la estructura Anti-procrastinación que le obligamos a instalar. Esa es la actitud de un constructor: actuar a pesar de tener la identidad rota para poder arreglarla desde adentro. Cerramos las puertas este domingo a las 23:59. Si tu excusa es que no confías en ti mismo, asume que te encanta ser un espectador. El que quiera dejar las excusas, mándeme un DM ahora mismo y lo ayudo a entrar."`,
+wppVibe:"Audio o video corto, natural.",
+reel:"Clip del Largo 2.",reelDolor:"—",reelAngulo:"Clip Largo 2 — prospección sin rogar",
+reelPilar:"🩹 Autoridad",reelCTA:"Link de pago",reelFormato:"Clip del largo",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Ventas D3 S1/3",copy:"Captura de Lucas + su miedo al abandono",img:"Captura Skool",cta:"SIN CTA"},
+{n:2,tipo:"Ventas D3 S2/3",copy:"'La academia no depende de tu motivación — depende de la estructura'",img:"Texto",cta:"SIN CTA"},
+{n:3,tipo:"Ventas D3 S3/3",copy:"'Domingo 23:59. Comenta ENTRAR'",img:"Urgencia",cta:"Comenta ENTRAR"}
+],
+storiesObj:"🟦 VENTAS D3 (3 stories). Marco Lucas + CTA.",
+graba:"—",marce:"Llamadas + seguimiento.",joc:"—",ba:"—",
+checks:["Clip Largo 2 + repost","Mensaje Marco Lucas al canal WPP","Stories ventas D3","Llamadas","Ventas en Stats"]},
+
+{num:26,d:"2026-07-08",fase:"F3",pill:"blue",titulo:"DÍA 26 — MARCO 3: CASO 'TOMÁS' (EDAD Y PAPÁS)",
+obj:"Destruir el síndrome del impostor por ser joven y la objeción 'mis papás no me dejan'. Ofrecer llamada con los papás presentes. Mitad del cierre — revisar cash vs base.",
+dolor:"Miedo a que nadie le tome en serio por la edad. Los papás diciendo que es una estafa.",
+deseo:"Que la familia te tome en serio. Demostrar con resultados.",
+wpp:`"Siguen lloviendo las notificaciones de nuevos ingresos. Miren a Tomás. Tiene 16 años y cuando hablamos me dijo: 'tengo miedo de que ningún cliente me tome en serio por mi edad y mis papás me dicen que es una estafa'. Le dije la verdad cruda: el mercado paga por problemas resueltos, no por tu DNI. Y tus papás te tratan como un inútil porque te comportas como uno. En vez de usar su edad como excusa, Tomás no le pidió permiso a nadie, consiguió su acceso y ya está estudiando cómo operar marcas. Así se comporta un Project Boy que busca libertad financiera. Recuerden: este domingo a la medianoche cerramos inscripciones. Si quieres dejar de ser un nene asustado, háblame al privado."`,
+wppVibe:"Texto + captura de Tomás en Skool.",
+reel:"Clip del Largo 3.",reelDolor:"—",reelAngulo:"Clip Largo 3 — el onboarding",
+reelPilar:"🩹 Autoridad",reelCTA:"Link de pago",reelFormato:"Clip del largo",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Ventas D4 S1/3",copy:"Captura de Tomás + su miedo por la edad y los papás",img:"Captura Skool",cta:"SIN CTA"},
+{n:2,tipo:"Ventas D4 S2/3",copy:"'El mercado paga por problemas resueltos, no por tu DNI'",img:"Texto",cta:"SIN CTA"},
+{n:3,tipo:"Ventas D4 S3/3",copy:"'Domingo 23:59. Comenta ENTRAR'",img:"Urgencia",cta:"Comenta ENTRAR"}
+],
+storiesObj:"🟦 VENTAS D4 (3 stories). Marco Tomás + CTA.",
+graba:"—",marce:"Llamadas (con papás si aplica). Revisar cash vs base.",joc:"—",ba:"—",
+checks:["Clip Largo 3 + repost","Mensaje Marco Tomás al canal WPP","Stories ventas D4","Llamadas (papás incluidos si aplica)","Cash vs base revisado en header","Ventas en Stats"]},
+
+{num:27,d:"2026-07-09",fase:"F3",pill:"blue",titulo:"DÍA 27 — MARCO 4: CASO 'MARCOS' (PARÁLISIS POR ANÁLISIS)",
+obj:"Destruir el 'lo voy a pensar'. El costo de esperar. Si el cash va abajo del base HOY: activar el playbook de semana floja.",
+dolor:"Parálisis por análisis. Guardar videos sin ejecutar nada hace meses.",
+deseo:"Tomar decisiones rápidas. Ejecutar.",
+wpp:`"Acabo de darle la bienvenida a Marcos. Él estaba estancado en la parálisis por análisis, guardando videos de dropshipping y trading sin ejecutar nada hace meses. Ayer me dijo: 'Lo voy a pensar unos días'. A las 2 horas me volvió a escribir: 'No quiero pensar más, mi vida es un caos, quiero ejecutar'. Ya está dentro configurando su Entrepreneur System y eligiendo su nicho. El estatus se gana con decisiones rápidas, no 'pensándolo' mientras sigues en cero. Cerramos el domingo a las 23:59 y el reloj no frena por nadie."`,
+wppVibe:"Video selfie casual con la historia de Marcos.",
+reel:"Clip del Largo 4.",reelDolor:"—",reelAngulo:"Clip Largo 4 — el ultimátum de la hora de la verdad",
+reelPilar:"🩹 Autoridad",reelCTA:"Link de pago",reelFormato:"Clip del largo",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Ventas D5 S1/3",copy:"'2 horas después de decir lo voy a pensar, ya está adentro'",img:"Captura Skool",cta:"SIN CTA"},
+{n:2,tipo:"Ventas D5 S2/3",copy:"'El estatus se gana con decisiones rápidas, no pensándolo'",img:"Texto",cta:"SIN CTA"},
+{n:3,tipo:"Ventas D5 S3/3",copy:"'Domingo 23:59. Comenta ENTRAR'",img:"Urgencia",cta:"Comenta ENTRAR"}
+],
+storiesObj:"🟦 VENTAS D5 (3 stories). Marco Marcos + CTA.",
+graba:"—",marce:"Llamadas. Si va flojo: segunda pasada a los 🟢 + push anual a los 57.",joc:"—",ba:"—",
+checks:["Clip Largo 4 + repost","Mensaje Marco Marcos al canal WPP","Stories ventas D5","Llamadas","¿Cash abajo del base? → playbook activado si aplica","Ventas en Stats"]},
+
+{num:28,d:"2026-07-10",fase:"F3",pill:"blue",titulo:"DÍA 28 — MARCO 5: NO HAY GARANTÍA",
+obj:"Destruir la mentalidad de víctima. Polarizar contra los que buscan seguridad. La honestidad ES el cierre más poderoso de todo el lanzamiento.",
+dolor:"El miedo al riesgo: '¿Y si lo pago y no me funciona?'",
+deseo:"Asumir la responsabilidad de su propio futuro.",
+wpp:`"Muchos por DM me están haciendo la misma pregunta cobarde: 'Bro, ¿y si lo pago y no me funciona? ¿Tienen garantía de reembolso?'. Se los voy a responder públicamente para que quede claro cómo operamos en Project Boy Academy: NO. No hay maldita garantía. Aquí te damos el Entrepreneur System completo. Te enseñamos a editar, a organizar marcas en Notion y a prospectar por DM. Te entregamos el mapa exacto de 90 días en la mano. Si tú entras y no consigues resultados, no es culpa del sistema, es TU CULPA por no sentar en la silla a ejecutar. Es tu culpa por preferir scrollear 3 horas en TikTok en lugar de prospectar. Esta academia no es una guardería para víctimas. Si quieres una vida con 'riesgo cero', ve a pedirle plata a tus papás toda la vida. Los que están entrando hoy lo hacen porque asumen la responsabilidad de su propio futuro. Pasado mañana, el domingo a las 23:59 cierro puertas. Entren a ejecutar o quédense afuera llorando."`,
+wppVibe:"Texto directo, crudo. Video si se puede. Sin anestesia.",
+reel:"Mejor clip restante.",reelDolor:"—",reelAngulo:"Clip restante + caption 'no hay garantía'",
+reelPilar:"🩹 Autoridad",reelCTA:"Link de pago",reelFormato:"Clip del largo",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Ventas D6 S1/3",copy:"'No hay garantía de reembolso. Y así debe ser.'",img:"Texto confrontativo",cta:"SIN CTA"},
+{n:2,tipo:"Ventas D6 S2/3",copy:"El alumno más reciente que entró — prueba social nueva",img:"Captura Skool",cta:"SIN CTA"},
+{n:3,tipo:"Ventas D6 S3/3",copy:"'Domingo 23:59. Última noche con el link activo. Comenta ENTRAR'",img:"Urgencia máxima",cta:"Comenta ENTRAR"}
+],
+storiesObj:"🟦 VENTAS D6 (3 stories). Marco NO garantía + CTA final del fin de semana.",
+graba:"—",marce:"Últimas llamadas agendadas para mañana-domingo.",joc:"—",ba:"—",
+checks:["Clip restante + repost","Mensaje NO garantía al canal WPP","Stories ventas D6","Llamadas","Ventas en Stats"]},
+
+{num:29,d:"2026-07-11",fase:"F3",pill:"red",titulo:"DÍA 29 — LÍMITE DE TIEMPO ABSOLUTO · ÚLTIMAS 24 HORAS ⏱️",
+obj:"Tensión máxima. Últimas 24 horas reales. Sin marcos nuevos — pura decisión.",
+dolor:"Última oportunidad para abandonar la inercia.",
+deseo:"No quedarse afuera. Actuar ahora.",
+wpp:`"Últimas horas. Hoy domingo a las 23:59 se apaga el link. Miren las capturas que les acabo de mandar de nuestra comunidad en Skool, está llena de pibes que esta semana dejaron de ser espectadores y ya están operando. Si sigues afuera, felicidades, te ganaste el premio a la inercia. Tienes hasta la medianoche para cambiar tu identidad rota o seguir consumiendo motivación barata en TikTok. Escríbeme al privado AHORA MISMO, es tu última chance para entrar."`,
+wppVibe:"Video de 40 segundos, ultimátum absoluto. + Capturas de la comunidad llena.",
+reel:"Reel crudo: 'ya no hay excusas'.",
+reelDolor:"FOMO final",reelAngulo:"'Últimas 24 horas — ya no hay excusas'",
+reelPilar:"🩹 Conexión",reelCTA:"Link de pago en bio — ÚLTIMO DÍA",reelFormato:"Reel crudo selfie",
+ytTema:"—",
+stories:[
+{n:1,tipo:"24 horas",copy:"'Quedan 24 horas'",img:"Countdown sticker",cta:"Link de pago"},
+{n:2,tipo:"18 horas",copy:"'Quedan 18 horas'",img:"Countdown sticker",cta:"Link de pago"},
+{n:3,tipo:"12 horas",copy:"'12 horas. Comunidad llena de pibes ejecutando.'",img:"Countdown + capturas Skool",cta:"Último link de pago"}
+],
+storiesObj:"🟦 Countdown en tiempo real: 24h → 18h → 12h.",
+graba:"—",marce:"Último día completo de llamadas. Mensaje 1x1 a todo carrito abandonado.",joc:"—",ba:"—",
+checks:["Reel 'últimas 24h' + repost","Mensaje límite al canal WPP","Stories countdown x3","Llamadas finales","Ventas en Stats"]},
+
+{num:30,d:"2026-07-12",fase:"F3",pill:"red",titulo:"DÍA 30 — ÚLTIMO DÍA · 23:59 SE APAGA 🔴",
+obj:"Countdown hasta el final. A las 23:59 el link MUERE — y muere de verdad. La congruencia es el activo del lanzamiento 2.",
+dolor:"Última llamada antes de quedar afuera para siempre.",
+deseo:"No quedarse mirando cómo los demás avanzan.",
+wpp:`4 MENSAJES DURANTE EL DÍA:
+Mañana: "Último día. Hoy a las 23:59 se cierra y no volvemos a abrir hasta nuevo aviso. Si tienes dudas, escríbeme al privado ahora."
+Tarde: "Quedan X horas. Las capturas de Skool hablan solas. [capturas de alumnos operando]"
+Noche: "Quedan 2 horas. No es marketing. A las 23:59 el link se apaga. Escríbeme si quieres entrar."
+23:00: "Queda 1 hora. Última oportunidad real."`,
+wppVibe:"Escalada de urgencia real. Cada mensaje más corto y más urgente.",
+reel:"'Hoy se cierra para siempre' — countdown real.",
+reelDolor:"—",reelAngulo:"'Hoy se cierra' — countdown real en caption",
+reelPilar:"🩹 Conexión",reelCTA:"Link de pago en bio — CIERRA HOY",reelFormato:"Reel de cierre",
+ytTema:"—",
+stories:[
+{n:1,tipo:"Mañana — Último día",copy:"'Último día real'",img:"Countdown sticker",cta:"Link de pago"},
+{n:2,tipo:"Tarde",copy:"'Quedan X horas' + capturas de Skool lleno",img:"Capturas + countdown",cta:"Link de pago"},
+{n:3,tipo:"Noche — '2 horas'",copy:"'2 horas. No es marketing.'",img:"Selfie serio + countdown",cta:"Link de pago"},
+{n:4,tipo:"CERRADO 23:59",copy:"'CERRADO. Las puertas se apagaron.'",img:"Texto sobre fondo oscuro",cta:"SIN CTA — terminó"}
+],
+storiesObj:"🟦 Countdown total hasta CERRADO — 4 stories durante el día.",
+graba:"—",marce:"Cierres de último minuto. 23:59: APAGAR el link de pago.",joc:"Desactivar checkout 23:59.",ba:"—",
+checks:["Reel cierre + repost","Secuencia de 4 mensajes WPP durante el día","Stories countdown x4","23:59 LINK APAGADO ✅","Ventas finales en Stats"]},
+
+{num:31,d:"2026-07-13",fase:"POST",pill:"gray",titulo:"DÍA 31 — PUERTAS CERRADAS · SILENCIO · A CONSTRUIR",
+obj:"Ejecutar la congruencia: nadie más entra. Onboarding a alumnos. Números finales. Retro de equipo. Descansar.",
+dolor:"—",deseo:"—",
+wpp:`"Puertas cerradas. Nadie más entra. Felicitaciones a los que tomaron acción y se convirtieron en Project Boys; hoy mismo empezamos con el seguimiento y las llamadas operativas. A los que me escribieron a las 2 AM pidiendo 'una oportunidad más': lo siento, las reglas se respetan. Suerte intentando descifrar el mercado solos. Voy a silenciar este grupo para enfocar el 100% de mi energía en mis alumnos. A construir."`,
+wppVibe:"Texto sobrio, firme. Sin dramatismo.",
+reel:"— (Sin Reel hoy)",reelDolor:"—",reelAngulo:"—",reelPilar:"—",reelCTA:"—",reelFormato:"—",
+ytTema:"—",
+stories:[{n:1,tipo:"Gratitud",copy:"Gracias a los que estuvieron presentes — sin venta",img:"Selfie sereno",cta:"SIN CTA"}],
+storiesObj:"Mensaje de gratitud. Sin oferta. Humaniza el cierre.",
+graba:"—",
+marce:"Reporte final: ventas por fuente, CPL promedio, tasa de cierre de llamadas.",
+joc:"Onboarding técnico: acceso a todos los alumnos verificado.",
+ba:"—",
+checks:["Mensaje de cierre al grupo","Onboarding enviado a alumnos nuevos","Stats finales capturados","Retro de equipo (30 min): ¿qué jaló? ¿qué no? ¿qué cambia para el lanzamiento 2?","Reporte final de Marce en Stats","DESCANSAR 🙏"]}
+];
+
+const BA_MODULES = [
+  {
+    n:1, title:"La Marca Personal", owner:"CHECO", deadline:"Jun 20",
+    desc:"El alumno entiende qué es una marca, por qué vende y qué rol cumple un Brand Architect. Primera impresión del alumno con la Academy — tiene que enganchar y hacer que el alumno sienta que por fin alguien le explica esto bien.",
+    temas:[
+      {sub:"1.1 Qué es una marca personal (y qué no es)", puntos:["Marca personal como percepción: no es lo que dices, es lo que la gente cree de ti","Marca personal como confianza acumulada","Diferencia entre fama y autoridad — por qué una vende y la otra no","El error de pensar que marca personal = ser famoso"]},
+      {sub:"1.2 Influencer vs Creador vs Marca", puntos:["Qué hace un influencer (atención sin dirección)","Qué hace un creador (contenido sin negocio)","Qué hace una marca personal (atención → confianza → venta)","Por qué no todo creador sabe vender — y por qué ahí está el negocio"]},
+      {sub:"1.3 Por qué venden las marcas personales", puntos:["Los 5 motores: confianza, autoridad, cercanía, prueba social y relación contenido↔venta","Cómo el contenido construye cada uno sin 'vender' directamente","Por qué la gente compra a personas, no a empresas"]},
+      {sub:"1.4 Los 4 pilares de una marca", puntos:["Nicho — de qué hablas y para quién","Mensaje — qué defiendes, contra qué luchas","Contenido — cómo lo comunicas","Oferta — qué vendes y cómo","Cómo se conectan: si uno falla, se cae todo"]},
+      {sub:"1.5 Qué hace un Brand Architect", puntos:["Qué analiza: contenido, oferta, posicionamiento, personaje","Qué mejora y qué problemas detecta","Qué valor real le aporta a una marca personal","Por qué este skill se puede cobrar (y a quién)"]}
+    ],
+    skills:[], recursos:[]
+  },
+  {
+    n:2, title:"Contenido con Intención", owner:"JOC + CHECO", deadline:"Jun 20",
+    desc:"Antes de crear, entender para qué sirve cada pieza. Sin esto el alumno publica por publicar y se frustra porque no ve resultados. Este módulo instala el pensamiento estratégico detrás de cada video.",
+    temas:[
+      {sub:"2.1 Los 3 tipos de contenido", puntos:["Atracción — trae gente nueva (viral, amplio, mainstream)","Autoridad — genera confianza (enseñanza, opinión, casos)","Conversión — mueve a la venta (oferta, prueba, objeciones)","Por qué necesitas los 3 y qué pasa si solo haces uno","→ Skill: Content Analyzer"]},
+      {sub:"2.2 Seguidor ideal vs cliente ideal", puntos:["Quién consume vs quién compra — no siempre son la misma persona","Todo video se dirige al seguidor ideal, no al cliente","Cómo una parte del seguidor sube de conciencia y se vuelve cliente"]},
+      {sub:"2.3 Nivel de conciencia: entrar sin sonar a vendedor", puntos:["Nivel 0 (no piensa en su problema) → Nivel 1 (empieza a sospecharlo)","El error de entrar diciendo el problema directo","La ruta: entrada mainstream → micro tensión → descubrimiento → curiosidad → CTA"]},
+      {sub:"2.4 Los 4 nichos virales y cómo traducir tu tema", puntos:["Los 4 nichos que siempre funcionan: salud, sexo, dinero, desarrollo personal","Cómo traducir cualquier tema al ángulo viral más cercano","El filtro 5-5-0: lo entiende un niño de 5, lo capta el 50%, 0 rebusque"]}
+    ],
+    skills:["Content Analyzer"], recursos:[]
+  },
+  {
+    n:3, title:"Videos Cortos (Reels, TikToks, Shorts)", owner:"CHECO", deadline:"Jun 22",
+    desc:"El corazón del curso. Crear Reels, TikToks y Shorts que paran el scroll y comunican. Aquí está TODO el sistema de video corto que el alumno va a aplicar para su cliente.",
+    temas:[
+      {sub:"3.1 Qué hace viral un video corto: la idea ganadora", puntos:["Qué es una idea ganadora (dolor fuerte, deseo claro, contradicción, tensión)","Dónde encontrarlas: comentarios, FAQs, creencias falsas, outliers del nicho","Cómo adaptar un outlier sin copiar — extraer el principio, no el tema","→ Skill: Idea Machine · Recurso: Banco de Ideas"]},
+      {sub:"3.2 El hook: parar el scroll en 3 segundos", puntos:["Las 3 fases mentales del espectador en los primeros 15 s","Los 6 hooks base: dolor, deseo, error, pregunta, contradicción, historia","El curiosity loop: información parcial → brecha → tensión → promesa","Los 8 errores que matan un hook","→ Skill: Hook Lab · Recurso: Banco de Hooks"]},
+      {sub:"3.3 La estructura base del video", puntos:["Hook → Contexto → Desarrollo → Moraleja → CTA","Qué función cumple cada parte y cuánto debe durar","Por qué la moraleja es obligatoria (sin ella no hay video)"]},
+      {sub:"3.4 Las 7 estructuras (A–G) y cuándo usar cada una", puntos:["A: historia completa · B: contexto breve + valor · C: idea fuerte sola","D: hook textual · E: comparación/personajes · F: lista/reglas · G: mini historia + revelación","Cómo elegir la estructura según la idea y el objetivo","→ Recurso: Las 7 Estructuras (1 hoja)"]},
+      {sub:"3.5 Cómo escribir el guion", puntos:["Una idea por video, lenguaje claro, frases cortas hablables","La moraleja filosa: tibia vs filosa (con ejemplos)","El CTA único que nace de la tensión del video","→ Skill: Script Master"]},
+      {sub:"3.6 Los 9 hacks de viralidad", puntos:["Efecto cotilla (FOMO), sesgo de negatividad, mentalidad segundo a segundo","Tono de voz, 'la patata', enemigo común, timing y tendencias","Humor + emociones, y desnudarse (vulnerabilidad)"]},
+      {sub:"3.7 Errores que matan un video corto", puntos:["Hook lento, mucho contexto, no ir al punto","Sin curiosity point cada 5-7 s, sin moraleja, cero CTA","Checklist final antes de grabar"]}
+    ],
+    skills:["Idea Machine","Hook Lab","Script Master"], recursos:["Banco de Ideas","Banco de Hooks","Las 7 Estructuras (1 hoja)"]
+  },
+  {
+    n:4, title:"YouTube (Video Largo)", owner:"JOC", deadline:"Jun 22",
+    desc:"Video largo: otra lógica completamente diferente. Estructurar, empaquetar y escribir para que retengan y conviertan. YouTube construye más autoridad que cualquier otra plataforma.",
+    temas:[
+      {sub:"4.1 Por qué YouTube es diferente a todo lo demás", puntos:["Búsqueda + recomendación vs scroll infinito","La retención manda: el video vive o muere por cuánto tiempo lo ven","Por qué YouTube construye más autoridad que cualquier otra plataforma"]},
+      {sub:"4.2 Packaging: título, miniatura y CTR", puntos:["Qué es el packaging y por qué decide si entran al video","Miniatura efectiva + título magnético + coherencia entre ambos","Cómo subir el CTR — ejemplos buenos y malos","→ Skill: Packaging Builder · Recurso: Guía de Packaging"]},
+      {sub:"4.3 La fórmula HPHVMC", puntos:["Hook → Promesa → Historia → Valor → Motivación → CTA","Cuánto dura cada parte y qué % del video ocupa","La intro decide la retención: cómo eliminar contexto innecesario","→ Skill: Script Master (modo YouTube)"]},
+      {sub:"4.4 Cómo encontrar ideas ganadoras en YouTube", puntos:["Outliers del nicho + búsquedas en YouTube + formatos validados","Problemas y dudas del cliente ideal como semillero de temas","Adaptar una idea ganadora sin copiarla"]},
+      {sub:"4.5 Cómo escribir el guion largo sin aburrir", puntos:["Reenganches (loops) y desarrollo en bloques numerados","Una idea por bloque, ejemplos prácticos, ritmo","Cómo evitar las 'dead zones' donde se van"]},
+      {sub:"4.6 Errores que destruyen la retención", puntos:["Hook lento, no cumplir la promesa, mal packaging","Mala calidad técnica, cero CTA","Checklist de retención"]}
+    ],
+    skills:["Packaging Builder","Script Master (modo YouTube)"], recursos:["Guía de Packaging"]
+  },
+  {
+    n:5, title:"Stories", owner:"CHECO", deadline:"Jun 24",
+    desc:"Donde se construye la comunidad y se vende suave. Las stories no son Reels — tienen su propia lógica y son la herramienta de fidelización más poderosa de Instagram.",
+    temas:[
+      {sub:"5.1 Para qué sirven las stories", puntos:["Diferencia entre feed y stories: alcance vs intimidad","Cercanía y confianza diaria — lo que fideliza","Por qué si solo subes Reels te ven pero no te conocen"]},
+      {sub:"5.2 Los 5 tipos de story", puntos:["Vida (intimidad) · Autoridad (confianza) · Prueba (casos)","Interacción (señal al algoritmo) · Venta suave","Formatos: texto, video hablando, encuesta, pregunta, screenshot, behind the scenes"]},
+      {sub:"5.3 Cómo generar interacción real", puntos:["Preguntas simples, encuestas, dilemas, respuestas rápidas","Cómo abrir conversación que lleve al DM","La interacción como retroalimentación + señal de algoritmo"]},
+      {sub:"5.4 Stories que construyen comunidad vs que venden", puntos:["Personales = intimidad · educativas = autoridad","La secuencia de venta por stories (hook → curiosidad → prueba → CTA)","Cómo cerrar un lanzamiento por stories sin quemar a la audiencia","→ Skill: Stories Strategist"]},
+      {sub:"5.5 Frecuencia y consistencia", puntos:["Por qué las stories diarias construyen comunidad real","El sesgo de coste hundido: las cosas largas/constantes gustan más","Cómo mantener ritmo sin morir en el intento"]}
+    ],
+    skills:["Stories Strategist"], recursos:[]
+  },
+  {
+    n:6, title:"Leer y Diagnosticar una Marca", owner:"JOC", deadline:"Jun 24",
+    desc:"Ya sabe crear. Ahora aplica ese criterio para leer la marca de otro y encontrar qué falla. Este es el módulo donde el alumno se convierte en consultor — ya no es solo creador, es arquitecto.",
+    temas:[
+      {sub:"6.1 Cómo analizar una marca desde afuera en 5 minutos", puntos:["Primera impresión, bio, contenido visible, oferta visible, claridad general","Qué dice el contenido de una marca aunque el creador no lo sepa","Cómo detectar patrones, inconsistencias y oportunidades perdidas","→ Skill: Brand Analyzer · Recurso: Checklist de Análisis"]},
+      {sub:"6.2 El personaje de marca", puntos:["Cómo leer energía, estilo, forma de hablar y coherencia","Atributos psicológicos: seguro, cercano, ambicioso, experto, rebelde, aspiracional","Frases estrella y voz reconocible — cómo identificarlas en otros","→ Skill: Character Reader"]},
+      {sub:"6.3 Problemas de contenido", puntos:["Contenido sin dirección, que no atrae, que no genera confianza, que no lleva a acción","Cómo nombrar el problema con precisión (no 'tu contenido está mal')","→ Skill: Content Analyzer"]},
+      {sub:"6.4 Problemas de oferta", puntos:["Oferta poco clara, escondida, sin promesa, difícil de entender","El gap entre lo que comunica y lo que quiere vender"]},
+      {sub:"6.5 Problemas de posicionamiento", puntos:["No se entiende qué lugar ocupa, no se diferencia, habla como todos","No tiene ángulo propio ni enemigo común"]},
+      {sub:"6.6 Señales de una marca confundida", puntos:["No se entiende qué vende · contenido random · mensaje inconsistente","Nicho poco claro · oferta escondida · estilo incoherente","El síntoma final: mucha atención, poca conversión"]}
+    ],
+    skills:["Brand Analyzer","Character Reader","Content Analyzer"], recursos:["Checklist de Análisis"]
+  },
+  {
+    n:7, title:"El Brand Audit (El Entregable)", owner:"CHECO + JOC", deadline:"Jun 25",
+    desc:"El entregable. El alumno cierra el curso con un documento real que puede mostrar, mandar y cobrar. Esto es lo que diferencia a un Brand Architect de alguien que solo da opiniones.",
+    temas:[
+      {sub:"7.1 Qué es un Brand Audit y qué NO es", puntos:["Diagnóstico + problemas + oportunidades + recomendaciones","No es una lista de quejas ni un 'te critico todo'","Es un mapa claro de qué arreglar y en qué orden"]},
+      {sub:"7.2 La estructura del Brand Audit de PBA", puntos:["El formato estándar, sección por sección","Cómo ordenar los hallazgos (contenido, oferta, posicionamiento)","Cómo se ve un audit profesional vs uno amateur","→ Skill: Brand Audit Builder · Recurso: Plantilla de Audit"]},
+      {sub:"7.3 De problema detectado a recomendación concreta", puntos:["Cómo priorizar: qué arreglar primero y por qué","Ideas de contenido, oferta y posicionamiento — las 3 capas","Cómo crear un plan de contenido simple (atracción/autoridad/conversión + frecuencia)"]},
+      {sub:"7.4 Cómo presentar sin sonar arrogante", puntos:["Mostrar el problema con claridad, dar la solución simple","Hablar con respeto — eres arquitecto, no crítico","El lenguaje que genera 'este wey sí sabe' en vez de 'qué pesado'"]},
+      {sub:"7.5 Tu primera Brand Audit (ejercicio final)", puntos:["Elegir una marca → analizarla → detectar problemas → proponer mejoras","Crear el documento final completo","Entregarlo en el Club de Feedback de la comunidad"]}
+    ],
+    skills:["Brand Audit Builder"], recursos:["Plantilla de Audit"]
+  }
+];
+
+const BA_AUDIT = [
+  "Entrar a Skool como alumno nuevo (cuenta limpia o modo incógnito)",
+  "El onboarding de bienvenida es claro — el alumno sabe exactamente qué hacer primero",
+  "Los 7 módulos están TODOS arriba y accesibles sin errores",
+  "Módulo 1: el alumno entiende qué es una marca y qué hace un BA al terminar",
+  "Módulo 2: el alumno sabe distinguir los 3 tipos de contenido y entiende nivel de conciencia",
+  "Módulo 3: el alumno puede escribir un guion de video corto con la estructura correcta",
+  "Módulo 3: incluye el Banco de Hooks y las 7 Estructuras como recursos descargables",
+  "Módulo 4: el alumno entiende packaging (título + miniatura) y la fórmula HPHVMC",
+  "Módulo 4: incluye la Guía de Packaging como recurso",
+  "Módulo 5: el alumno sabe leer y diagnosticar una marca en 5 minutos",
+  "Módulo 5: incluye el Checklist de Análisis como recurso descargable",
+  "Módulo 6: el alumno sabe construir un Brand Audit completo y profesional",
+  "Módulo 6: incluye la Plantilla de Audit lista para usar",
+  "Módulo 7: el ejercicio final está claro — elegir marca, auditarla, entregarlo al Club",
+  "Todos los Skills mencionados (Content Analyzer, Hook Lab, etc.) están linkados o explicados",
+  "No hay links rotos ni recursos faltantes en ningún módulo",
+  "El orden 1→7 tiene una lógica clara: entender → crear → diagnosticar → entregar",
+  "La experiencia completa se siente profesional y justifica los $169 / $37 al mes"
+];
+
+const PLAYBOOKS = [
+  {title:"📞 Llamada de Mentorship — guion con árbol de decisión",content:`<p><strong>APERTURA (2 min):</strong> "Vi tu form / nuestra conversación. Antes de contarte nada, quiero entender dónde estás." Crea contexto, NO pitches en frío.</p>
+  <p style="margin-top:10px"><strong>4 PREGUNTAS DE CALIFICACIÓN:</strong></p>
+  <ol style="padding-left:18px;margin-top:6px;display:grid;gap:6px">
+    <li>¿Qué has intentado hasta hoy para facturar?</li>
+    <li>¿Has cerrado algún cliente, aunque fueran $50?</li>
+    <li>¿Cuánto tienes disponible para invertir en este sistema?</li>
+    <li>¿Qué tan en serio vas, del 1 al 10?</li>
+  </ol>
+  <p style="margin-top:10px"><strong>ÁRBOL:</strong> Facturó algo O hambre 8+ con bolsillo 400+ → pitch Mentorship a $497. Bolsillo justo → $397. No califica → anual $169 directo, sin rodeo.</p>
+  <p style="margin-top:10px"><strong>EL PITCH (90 seg):</strong> Promesa ($3,000 en 90 días) → Vehículo (3 cursos + 1:1 contigo 12 semanas) → Por qué el precio (cohorte fundadora, sube a $997 con los primeros casos) → Garantía de claridad 14 días → "¿Te metemos?"</p>
+  <p style="margin-top:10px"><strong>OBJECIONES:</strong></p>
+  <ul style="padding-left:18px;margin-top:6px;display:grid;gap:6px;font-size:13px">
+    <li><strong>Dinero:</strong> plan de pagos / downsell al anual</li>
+    <li><strong>Papás:</strong> "Agenda con ellos presentes, yo les explico"</li>
+    <li><strong>"Lo pienso":</strong> "¿Qué te falta saber para decidir hoy?"</li>
+    <li><strong>No es fit:</strong> Se dice derecho — la congruencia vende el lanzamiento 2</li>
+  </ul>`},
+  {title:"🎤 Masterclass hora por hora (Sáb 4 jul)",content:`<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <tbody>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 9px;font-weight:700;white-space:nowrap">07:00</td><td>Despertás temprano. Repaso de slides + prueba técnica del live (audio, pantalla, link)</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 9px;font-weight:700">08:00</td><td>WPP: "Hoy es el día" — acomoden horarios, sala con límite de capacidad</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 9px;font-weight:700">11:00</td><td>WPP ultimátum — modo avión, papel y bolígrafo · Stories: "faltan 4 horas"</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 9px;font-weight:700">11:45</td><td>WPP + stories: 🔴 link del live</td></tr>
+      <tr style="background:var(--gold-dim);border-bottom:1px solid var(--line)"><td style="padding:8px 9px;font-weight:700;color:var(--gold)">12:00 MC</td><td>Ecosistema 90 Días → Tour Academy → <strong>ANUAL PRIMERO</strong> con bonus → mensual plan B → Mentorship: "aplica por DM"</td></tr>
+      <tr><td style="padding:8px 9px;font-weight:700">Post</td><td>WPP gratitud · Stories screenshots del live + entradas · Marce arranca setting de DMs</td></tr>
+    </tbody>
+  </table>`},
+  {title:"📉 Ad muerto + semana floja",content:`<p><strong>AD MUERTO:</strong> 3 días con CPL >$1.50 = apagado, budget al ⭐. Los ángulos ⭐ dictan el batch 2 y los Shorts.</p>
+  <p style="margin-top:10px"><strong>SEMANA FLOJA (cash abajo del base después de la MC):</strong></p>
+  <ol style="padding-left:18px;margin-top:6px;display:grid;gap:6px;font-size:13px">
+    <li>Segunda pasada de llamadas a los 🟢 del xlsx</li>
+    <li>Push extra de migración anual a los 57 miembros actuales</li>
+    <li>Clips de los largos como Reels extra (contenido adicional en la Fase 3)</li>
+    <li>NO bajar el precio — subir la prueba (más capturas de Skool, más casos)</li>
+  </ol>`},
+  {title:"🆘 Si un día se cae (examen, imprevisto, TeensClub explota)",content:`<p style="color:var(--mut)"><strong>Prioridad de rescate:</strong></p>
+  <ol style="padding-left:18px;margin-top:6px;display:grid;gap:6px;font-size:13px">
+    <li><strong>El mensaje de WhatsApp del día</strong> (5 min — NUNCA se cae, es el curso que prometiste)</li>
+    <li><strong>Las stories</strong> (10 min — mantienen la presencia)</li>
+    <li><strong>El Reel</strong> (puede correrse 1 día sin drama)</li>
+    <li><strong>YouTube</strong> (tiene buffer de 96 hrs, no se toca)</li>
+  </ol>
+  <p style="margin-top:10px;color:var(--mut)">Si se cayeron 2+ días: recorta Reels, JAMÁS el WPP. El WPP es el contrato con las personas que se unieron al grupo.</p>`}
+];
+
+// ═══════════════════════════════════════════════
+// STATE (localStorage)
+// ═══════════════════════════════════════════════
+function getState() {
+  try { return JSON.parse(localStorage.getItem('pba-v6') || '{}'); } catch { return {}; }
+}
+function saveState(s) {
+  localStorage.setItem('pba-v6', JSON.stringify(s));
+  document.getElementById('saving-inline').style.display = 'inline';
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(() => {
+    document.getElementById('saving-inline').style.display = 'none';
+  }, 1200);
+}
+let STATE = getState();
+function upd(fn) { fn(STATE); saveState(STATE); }
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function fmtDate(d) {
+  const dt = new Date(d + 'T12:00:00');
+  return `${DNAMES[dt.getDay()]} ${dt.getDate()} ${MONTHS[dt.getMonth()+1]}`;
+}
+function pillarColor(pill) {
+  const map = {gold:'var(--gold)',red:'var(--red)',purple:'var(--purple)',blue:'var(--blue)',amber:'var(--amber)',gray:'var(--mut)'};
+  return map[pill] || 'var(--mut)';
+}
+function faseLabel(f) {
+  const m = {D0:'Día 0',F1:'F1 · Atracción',F2a:'F2 · Nutrición',F2b:'F2b · Waitlist',MC:'🔴 Masterclass',F3:'F3 · Cierre',POST:'Post'};
+  return m[f] || f;
+}
+
+// ═══════════════════════════════════════════════
+// CASH
+// ═══════════════════════════════════════════════
+function calcCash() {
+  const v = STATE.ventas || {};
+  return MRR_BASE + (v.men||0)*37 + (v.anu||0)*169 + (v.fun||0)*169 + (v.m397||0)*397 + (v.m497||0)*497;
+}
+function refreshCash() {
+  const cash = calcCash();
+  document.getElementById('cash-display').textContent = '$' + cash.toLocaleString();
+  const pct = Math.min(100, cash / ESCENARIOS.meta * 100);
+  document.getElementById('cash-fill').style.width = pct + '%';
+  const men = (STATE.ventas?.m397||0) + (STATE.ventas?.m497||0);
+  let dx = '';
+  if (cash < 3000) dx = `⏳ Arrancando. La primera meta: 1 mentorship esta semana fundador — cambia el mes.`;
+  else if (cash < ESCENARIOS.piso) dx = `📍 Debajo del piso ($7.4K). Mentorships: ${men}/4. Activa el playbook de semana floja.`;
+  else if (cash < ESCENARIOS.base) dx = `📈 Arriba del piso, persiguiendo los $10K. Mentorships: ${men}/4.`;
+  else dx = `🔥 ARRIBA DEL BASE. Mentorships: ${men}. A por $15.3K — documenta TODO para el lanzamiento 2.`;
+  document.getElementById('cash-dx').textContent = dx;
+}
+
+// ═══════════════════════════════════════════════
+// COUNTDOWNS
+// ═══════════════════════════════════════════════
+function countdown(target) {
+  const t = new Date(target) - Date.now();
+  if (t <= 0) return '✅ Pasó';
+  const d = Math.floor(t/864e5), h = Math.floor(t%864e5/36e5), m = Math.floor(t%36e5/6e4);
+  return `${d}d ${h}h ${m}m`;
+}
+function refreshCountdowns() {
+  document.getElementById('cd1').textContent = countdown('2026-06-18T23:59:00-06:00');
+  document.getElementById('cd2').textContent = countdown('2026-07-03T23:59:00-06:00');
+  document.getElementById('cd3').textContent = countdown('2026-07-04T12:00:00-06:00');
+  document.getElementById('cd4').textContent = countdown('2026-07-12T23:59:00-06:00');
+}
+
+// ═══════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// BUILD DAYS
+// ═══════════════════════════════════════════════
+function buildDays() {
+  const today = new Date().toLocaleDateString('sv', {timeZone:'America/Mexico_City'});
+  const container = document.getElementById('days-container');
+  
+  DAYS.forEach(D => {
+    const isToday = D.d === today;
+    const checks = STATE.checklists?.[D.d] || {};
+    const total = D.checks.length;
+    const done = D.checks.filter((_, j) => checks[j]).length;
+    const pct = total > 0 ? (done / total * 100) : 0;
+    
+    const card = document.createElement('div');
+    card.className = `day-card${isToday ? ' today' : ''}`;
+    card.id = `day-${D.num}`;
+
+    const guionKey = `guion-${D.d}`;
+    const reelGuion = STATE.guiones?.[guionKey+'-reel'] || '';
+    const ytGuion = STATE.guiones?.[guionKey+'-yt'] || '';
+
+    card.innerHTML = `
+    <div class="day-summary" onclick="toggleDay(${D.num})">
+      <span class="day-date" style="color:${isToday?'var(--gold)':'var(--txt)'}">${fmtDate(D.d)}</span>
+      <span class="day-title-text">${D.titulo} ${isToday ? '<span class="pill pill-gold" style="margin-left:6px">HOY</span>' : ''}</span>
+      <div class="day-right">
+        <span class="pill pill-${D.pill}" style="font-size:10px">${faseLabel(D.fase)}</span>
+        <span class="mini-prog"><span class="mini-prog-fill" style="width:${pct}%"></span></span>
+        <span class="day-arrow">+</span>
+      </div>
+    </div>
+    <div class="day-body">
+      <!-- FOCO -->
+      <div class="foco-box">
+        <div class="foco-label">🎯 Objetivo técnico del día</div>
+        ${D.obj}
+        ${D.dolor !== '—' ? `<div style="margin-top:8px"><span style="color:var(--red);font-weight:700">💥 Dolor tocado:</span> ${D.dolor}</div>` : ''}
+        ${D.deseo !== '—' ? `<div style="margin-top:4px"><span style="color:var(--green);font-weight:700">✨ Deseo activado:</span> ${D.deseo}</div>` : ''}
+      </div>
+
+      <!-- WPP -->
+      ${D.wpp !== '—' ? `
+      <div class="sec-h3" style="margin-top:16px">💬 WhatsApp canal · guion word-for-word</div>
+      <div class="block" style="background:var(--panel2)">
+        <div class="block-label">📹 Vibe / Entorno de grabación</div>
+        <p style="font-size:13px">${D.wppVibe}</p>
+      </div>
+      <div class="guion-box">
+        <div class="guion-header">
+          <span class="guion-title">📋 Guion exacto — copy-paste ready</span>
+        </div>
+        <div class="guion-text">${D.wpp}</div>
+      </div>` : ''}
+
+      <!-- REEL -->
+      ${D.reel !== '—' ? `
+      <div class="sec-h3">📱 Reel / TikTok</div>
+      <div class="blocks">
+        <div class="block"><div class="block-label">Objetivo</div>${D.reel}</div>
+        <div class="block"><div class="block-label">💥 Dolor</div>${D.reelDolor || '—'}</div>
+        <div class="block"><div class="block-label">Ángulo</div>${D.reelAngulo}</div>
+        <div class="block"><div class="block-label">Pilar</div>${D.reelPilar}</div>
+        <div class="block"><div class="block-label">CTA</div>${D.reelCTA}</div>
+        <div class="block"><div class="block-label">Formato</div>${D.reelFormato}</div>
+      </div>
+      <div style="margin:10px 0">
+        <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px">✍️ Guion del Reel (editable — genera con script-master)</div>
+        <textarea class="guion-edit" placeholder="Pega aquí el guion del Reel cuando lo tengas..." oninput="saveGuion('${guionKey}-reel', this.value)">${reelGuion}</textarea>
+      </div>` : ''}
+
+      <!-- YT -->
+      <div class="sec-h3">▶️ YouTube</div>
+      <div class="block">${D.ytTema}</div>
+      ${D.ytTema !== '—' && !D.ytTema.startsWith('— (') && !D.ytTema.startsWith('—') ? `
+      <div style="margin:8px 0">
+        <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px">✍️ Guion / outline del video de YT (editable)</div>
+        <textarea class="guion-edit" style="min-height:60px" placeholder="Outline o guion del video de YouTube..." oninput="saveGuion('${guionKey}-yt', this.value)">${ytGuion}</textarea>
+      </div>` : ''}
+
+      <!-- STORIES -->
+      <div class="sec-h3">📲 Stories</div>
+      <div style="background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 13px;margin-bottom:8px;font-size:13px">
+        <strong>Objetivo:</strong> ${D.storiesObj}
+      </div>
+      ${D.stories.length > 0 ? `
+      <div style="overflow:auto">
+        <table style="width:100%;font-size:12.5px">
+          <thead><tr style="border-bottom:1px solid var(--line)">
+            <th>#</th><th>Tipo</th><th>Copy / Mensaje</th><th>Imagen sugerida</th><th>CTA</th>
+          </tr></thead>
+          <tbody>
+            ${D.stories.map(s => `<tr style="border-bottom:1px solid var(--line)">
+              <td style="padding:8px;font-weight:700;color:var(--purple)">${s.n}</td>
+              <td style="padding:8px">${s.tipo}</td>
+              <td style="padding:8px;font-style:italic">${s.copy}</td>
+              <td style="padding:8px;color:var(--mut)">${s.img}</td>
+              <td style="padding:8px;color:${s.cta.includes('SIN')? 'var(--mut)':'var(--green)'}">${s.cta}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : '<p style="color:var(--mut);font-size:13px">Sin stories hoy.</p>'}
+
+      <!-- OPERATIVOS -->
+      <div class="sec-h3">🎬 Se graba · 💰 Marce · 📦 Joc</div>
+      <div class="blocks">
+        <div class="block"><div class="block-label">🎬 Qué se graba</div>${D.graba}</div>
+        <div class="block"><div class="block-label">💰 Marce</div>${D.marce}</div>
+        <div class="block"><div class="block-label">📦 Joc</div>${D.joc}</div>
+        ${D.ba !== '—' ? `<div class="block" style="border-color:var(--gold)"><div class="block-label" style="color:var(--gold)">📚 Brand Architect</div>${D.ba}</div>` : ''}
+      </div>
+
+      <!-- CHECKLIST -->
+      <div class="checklist">
+        <div class="check-header">Checklist del día <span style="color:var(--mut);font-weight:400;font-family:Inter">(${done}/${total})</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-${D.d}" style="width:${pct}%"></div></div>
+        ${D.checks.map((c, j) => `
+        <label class="check-item${checks[j] ? ' done' : ''}" id="ci-${D.d}-${j}">
+          <input type="checkbox" ${checks[j] ? 'checked' : ''} onchange="toggleCheck('${D.d}', ${j}, this.checked)">
+          <span>${c}</span>
+        </label>`).join('')}
+      </div>
+    </div>`;
+    container.appendChild(card);
+
+    if (isToday) {
+      card.classList.add('open');
+      card.querySelector('.day-arrow').style.transform = 'rotate(45deg)';
+    }
+  });
+}
+
+function toggleDay(num) {
+  const card = document.getElementById(`day-${num}`);
+  const isOpen = card.classList.toggle('open');
+  card.querySelector('.day-arrow').style.transform = isOpen ? 'rotate(45deg)' : 'rotate(0deg)';
+}
+
+function toggleCheck(date, j, val) {
+  upd(s => {
+    if (!s.checklists) s.checklists = {};
+    if (!s.checklists[date]) s.checklists[date] = {};
+    s.checklists[date][j] = val;
+  });
+  const D = DAYS.find(d => d.d === date);
+  if (!D) return;
+  const checks = STATE.checklists[date] || {};
+  const done = D.checks.filter((_, j) => checks[j]).length;
+  const pct = D.checks.length > 0 ? (done / D.checks.length * 100) : 0;
+  const prog = document.getElementById(`prog-${date}`);
+  if (prog) prog.style.width = pct + '%';
+  const label = document.getElementById(`ci-${date}-${j}`);
+  if (label) label.className = `check-item${val ? ' done' : ''}`;
+}
+
+function saveGuion(key, val) {
+  upd(s => {
+    if (!s.guiones) s.guiones = {};
+    s.guiones[key] = val;
+  });
+}
+
+// ═══════════════════════════════════════════════
+// BUILD BRAND ARCHITECT
+// ═══════════════════════════════════════════════
+function buildBA() {
+  const container = document.getElementById('ba-modules');
+  BA_MODULES.forEach(m => {
+    const noteKey = `ba-note-${m.n}`;
+    const done = STATE.ba_done?.[m.n] || false;
+    const note = STATE.ba_notes?.[noteKey] || '';
+    const ownerClass = m.owner.includes('JOC') && m.owner.includes('CHECO') ? 'ba-both' : m.owner === 'JOC' ? 'ba-joc' : 'ba-checo';
+
+    // Build submódulos HTML
+    let temasHtml = '';
+    if (m.temas) {
+      temasHtml = m.temas.map(t => `
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:5px">📌 ${t.sub}</div>
+          <ul style="padding-left:16px;display:grid;gap:4px">
+            ${t.puntos.map(p => {
+              const isSkill = p.startsWith('→');
+              return `<li style="font-size:12.5px;color:${isSkill ? 'var(--teal)' : 'var(--mut)'};font-weight:${isSkill ? '600' : '400'}">${p}</li>`;
+            }).join('')}
+          </ul>
+        </div>`).join('');
+    }
+
+    // Skills & recursos badges
+    const skillsBadges = (m.skills||[]).map(s => `<span style="background:rgba(45,212,191,.12);color:var(--teal);padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700">🔧 ${s}</span>`).join(' ');
+    const recBadges = (m.recursos||[]).map(r => `<span style="background:rgba(96,165,250,.12);color:var(--blue);padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700">📄 ${r}</span>`).join(' ');
+
+    container.innerHTML += `
+    <div class="ba-row" style="${done ? 'opacity:.5;' : ''}border-left:3px solid ${done ? 'var(--green)' : m.n<=2?'var(--gold)':m.n<=4?'var(--purple)':m.n<=6?'var(--blue)':'var(--teal)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div>
+          <span style="color:var(--mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">MÓDULO ${m.n}</span>
+          <div style="font-family:'Archivo',sans-serif;font-weight:900;font-size:16px;margin-top:2px;color:${done?'var(--mut)':'var(--txt)'}">${m.title}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="ba-badge ${ownerClass}">${m.owner}</span>
+          <span class="ba-badge" style="background:rgba(239,68,68,.12);color:#FCA5A5">📅 ${m.deadline}</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:${done?'var(--green)':'var(--mut)'}">
+            <input type="checkbox" ${done ? 'checked' : ''} style="accent-color:var(--green);width:16px;height:16px" onchange="toggleBA(${m.n}, this.checked)">
+            ${done ? '✅ Listo' : 'Marcar listo'}
+          </label>
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--mut);margin-bottom:12px;line-height:1.6">${m.desc}</p>
+
+      ${(m.skills?.length || m.recursos?.length) ? `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+        ${skillsBadges} ${recBadges}
+      </div>` : ''}
+
+      <details style="margin-bottom:12px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--gold);font-weight:700;list-style:none;padding:8px 0;border-top:1px solid var(--line)">
+          ▸ Ver los ${m.temas?.length || 0} submódulos completos
+        </summary>
+        <div style="margin-top:10px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--line)">
+          ${temasHtml}
+        </div>
+      </details>
+
+      <div style="font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px">📝 Notas de producción (ideas, estructura, pendientes)</div>
+      <textarea class="guion-edit" style="min-height:70px" placeholder="Ideas para este módulo, estructura de la clase, cosas pendientes, links de recursos..." oninput="saveBANote('${noteKey}', this.value)">${note}</textarea>
+    </div>`;
+  });
+
+  // Audit checks
+  const auditContainer = document.getElementById('ba-audit-checks');
+  BA_AUDIT.forEach((c, i) => {
+    const done = STATE.ba_audit?.[i] || false;
+    auditContainer.innerHTML += `
+    <label class="check-item${done ? ' done' : ''}" id="ba-audit-${i}">
+      <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleBAAudit(${i}, this.checked)">
+      <span>${c}</span>
+    </label>`;
+  });
+}
+
+function toggleBA(n, val) {
+  upd(s => { if (!s.ba_done) s.ba_done = {}; s.ba_done[n] = val; });
+  refreshBAProgress();
+}
+function refreshBAProgress() {
+  const done = Object.values(STATE.ba_done || {}).filter(Boolean).length;
+  const el = document.getElementById('ba-progress-val');
+  const bar = document.getElementById('ba-progress-bar');
+  if (el) el.textContent = `${done}/7`;
+  if (bar) bar.style.width = (done/7*100) + '%';
+}
+
+function saveBANote(key, val) {
+  upd(s => { if (!s.ba_notes) s.ba_notes = {}; s.ba_notes[key] = val; });
+}
+function toggleBAAudit(i, val) {
+  upd(s => { if (!s.ba_audit) s.ba_audit = {}; s.ba_audit[i] = val; });
+  const label = document.getElementById(`ba-audit-${i}`);
+  if (label) label.className = `check-item${val ? ' done' : ''}`;
+}
+
+// ═══════════════════════════════════════════════
+// BUILD STATS
+// ═══════════════════════════════════════════════
+function buildVentas() {
+  const defs = [
+    {k:'men',label:'Mensual $37',price:37},
+    {k:'anu',label:'Anual $169 (nuevos)',price:169},
+    {k:'fun',label:'Anual fundador $169 (57+caja)',price:169},
+    {k:'m397',label:'Mentorship $397',price:397},
+    {k:'m497',label:'Mentorship $497',price:497},
+  ];
+  const g = document.getElementById('ventas-grid');
+  g.innerHTML = '';
+  defs.forEach(d => {
+    const val = STATE.ventas?.[d.k] || 0;
+    g.innerHTML += `
+    <div class="stat-box">
+      <div class="stat-label">${d.label}</div>
+      <div class="counter-row" style="margin:8px 0">
+        <button class="btn-pm" onclick="changeVenta('${d.k}', -1)">−</button>
+        <div class="stat-val" id="venta-${d.k}">${val}</div>
+        <button class="btn-pm" onclick="changeVenta('${d.k}', 1)">+</button>
+      </div>
+      <div class="stat-sub" id="venta-cash-${d.k}">$${(val*d.price).toLocaleString()}</div>
+    </div>`;
+  });
+  // MRR box
+  g.innerHTML += `<div class="stat-box"><div class="stat-label">MRR colchón base</div><div class="stat-val">$654</div><div class="stat-sub">fijo</div></div>`;
+}
+function changeVenta(k, delta) {
+  const prices = {men:37,anu:169,fun:169,m397:397,m497:497};
+  upd(s => {
+    if (!s.ventas) s.ventas = {};
+    s.ventas[k] = Math.max(0, (s.ventas[k]||0) + delta);
+  });
+  const val = STATE.ventas[k];
+  const el = document.getElementById(`venta-${k}`);
+  const cash = document.getElementById(`venta-cash-${k}`);
+  if (el) el.textContent = val;
+  if (cash) cash.textContent = '$' + (val * prices[k]).toLocaleString();
+  refreshCash();
+}
+
+function refreshLeadTable() {
+  const leads = (STATE.leads || []).sort((a,b)=>a.d.localeCompare(b.d));
+  const totLeads = leads.reduce((s,r)=>s+r.l,0);
+  const totSpend = leads.reduce((s,r)=>s+r.sp,0);
+  const avgCpl = totLeads > 0 && totSpend > 0 ? '$' + (totSpend/totLeads).toFixed(2) : '—';
+  const cp = leads.filter(r=>r.d>='2026-06-13'&&r.d<='2026-06-15').reduce((s,r)=>s+r.l,0);
+  let cpTxt, cpColor;
+  if (cp===0){cpTxt='Sin datos 13-15';cpColor='var(--mut)'}
+  else if (cp>=600){cpTxt=`🟢 ${cp} leads`;cpColor='var(--green)'}
+  else if (cp>=300){cpTxt=`🟡 ${cp} leads`;cpColor='var(--amber)'}
+  else{cpTxt=`🔴 ${cp} leads`;cpColor='var(--red)'}
+
+  document.getElementById('lead-kpis').innerHTML = `
+    <div class="stat-box"><div class="stat-label">Leads acumulados</div><div class="stat-val">${totLeads}</div></div>
+    <div class="stat-box"><div class="stat-label">CPL promedio</div><div class="stat-val" style="font-size:22px">${avgCpl}</div></div>
+    <div class="stat-box"><div class="stat-label">Gasto / $500</div><div class="stat-val" style="font-size:22px">$${totSpend.toFixed(0)}</div></div>
+    <div class="stat-box"><div class="stat-label">📍 Checkpoint (D1-D3)</div><div class="stat-val" style="font-size:18px;color:${cpColor}">${cpTxt}</div></div>`;
+
+  const tbody = document.getElementById('lead-table');
+  tbody.innerHTML = leads.map((r,i)=>{
+    const cpl = r.l > 0 ? '$'+(r.sp/r.l).toFixed(2) : '—';
+    const cplColor = r.l > 0 && r.sp/r.l > 1.5 ? '#FCA5A5' : 'var(--txt)';
+    return `<tr><td>${r.d}</td><td>${r.l}</td><td>$${r.sp?.toFixed(2)}</td><td style="color:${cplColor}">${cpl}</td><td>${r.tot||'—'}</td><td><button class="btn-del" onclick="deleteLead(${i})">✕</button></td></tr>`;
+  }).join('');
+}
+function addLead() {
+  const d = document.getElementById('lg-date').value;
+  const l = parseInt(document.getElementById('lg-leads').value||0);
+  const sp = parseFloat(document.getElementById('lg-spend').value||0);
+  const tot = document.getElementById('lg-total').value;
+  if (!d) { alert('Pon la fecha'); return; }
+  upd(s => {
+    if (!s.leads) s.leads = [];
+    s.leads = s.leads.filter(r => r.d !== d);
+    s.leads.push({d,l,sp,tot});
+  });
+  ['lg-leads','lg-spend','lg-total'].forEach(id => {const e=document.getElementById(id);if(e)e.value='';});
+  refreshLeadTable();
+}
+function deleteLead(i) {
+  upd(s => { if(s.leads) s.leads.splice(i,1); });
+  refreshLeadTable();
+}
+
+function refreshAdTable() {
+  const ads = STATE.ads || [];
+  document.getElementById('ad-table').innerHTML = ads.map((r,i)=>`<tr><td>${r.n}</td><td>${r.st}</td><td><button class="btn-del" onclick="deleteAd(${i})">✕</button></td></tr>`).join('');
+}
+function addAd() {
+  const n = document.getElementById('ad-name').value.trim();
+  if (!n) return;
+  const st = document.getElementById('ad-status').value;
+  upd(s => { if(!s.ads) s.ads=[]; s.ads.push({n,st}); });
+  document.getElementById('ad-name').value = '';
+  refreshAdTable();
+}
+function deleteAd(i) {
+  upd(s => { if(s.ads) s.ads.splice(i,1); });
+  refreshAdTable();
+}
+
+function refreshStoryTable() {
+  const rows = (STATE.stories || []).sort((a,b)=>a.d.localeCompare(b.d));
+  document.getElementById('story-table').innerHTML = rows.map((r,i)=>{
+    const ret = r.v1 > 0 ? Math.round(r.vf/r.v1*100) : 0;
+    const [v,c] = ret>=70?['🟢 Sólida','#86EFAC']:ret>=50?['🟡 Mejorar hook','#FCD34D']:['🔴 Secuencia rota','#FCA5A5'];
+    return `<tr><td>${r.d}</td><td style="color:${c}">${ret}%</td><td>${r.resp}</td><td>${r.cal}/10</td><td style="color:${c}">${v}</td><td><button class="btn-del" onclick="deleteStory(${i})">✕</button></td></tr>`;
+  }).join('');
+}
+function addStory() {
+  const d = document.getElementById('st-date').value;
+  if (!d) { alert('Pon la semana'); return; }
+  const r = {d, v1:+document.getElementById('st-v1').value||0, vf:+document.getElementById('st-vf').value||0, resp:+document.getElementById('st-resp').value||0, cal:+document.getElementById('st-cal').value||0};
+  upd(s => { if(!s.stories) s.stories=[]; s.stories = s.stories.filter(x=>x.d!==d); s.stories.push(r); });
+  ['st-v1','st-vf','st-resp','st-cal'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  refreshStoryTable();
+}
+function deleteStory(i) {
+  upd(s => { if(s.stories) s.stories.splice(i,1); });
+  refreshStoryTable();
+}
+
+// ═══════════════════════════════════════════════
+// BUILD PLAYBOOKS
+// ═══════════════════════════════════════════════
+function buildPlaybooks() {
+  const c = document.getElementById('playbooks-container');
+  PLAYBOOKS.forEach(p => {
+    c.innerHTML += `
+    <div class="playbook-card" onclick="this.classList.toggle('open');this.querySelector('.day-arrow').style.transform=this.classList.contains('open')?'rotate(45deg)':'rotate(0deg)'">
+      <div class="playbook-summary">${p.title}<span class="day-arrow">+</span></div>
+      <div class="playbook-body">${p.content}</div>
+    </div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  buildDays();
+  buildBA();
+  buildVentas();
+  refreshLeadTable();
+  refreshAdTable();
+  refreshStoryTable();
+  buildPlaybooks();
+  refreshCash();
+  refreshCountdowns();
+  refreshBAProgress();
+  setInterval(refreshCountdowns, 30000);
+});
+</script>
+</body>
+</html>
